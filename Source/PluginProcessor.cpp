@@ -285,8 +285,8 @@ bool LoopLoopLoopAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* LoopLoopLoopAudioProcessor::createEditor()
 {
-    //return new LoopLoopLoopAudioProcessorEditor (*this);
-    return new juce::GenericAudioProcessorEditor(*this);
+    return new LoopLoopLoopAudioProcessorEditor (*this);
+    //return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================

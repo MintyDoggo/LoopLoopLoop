@@ -4,6 +4,10 @@
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1">
   <MAINGROUP id="AtD8Wy" name="LoopLoopLoop">
     <GROUP id="{0F52AFBF-8EA3-565C-83C9-D9FA7C5B1B9D}" name="Source">
+      <FILE id="XtOMxk" name="OpenGLComponent.cpp" compile="1" resource="0"
+            file="Source/OpenGLComponent.cpp"/>
+      <FILE id="bQFrkz" name="OpenGLComponent.h" compile="0" resource="0"
+            file="Source/OpenGLComponent.h"/>
       <FILE id="FRN7nQ" name="Utilities.cpp" compile="1" resource="0" file="Source/Utilities.cpp"/>
       <FILE id="BSup3K" name="Utilities.h" compile="0" resource="0" file="Source/Utilities.h"/>
       <FILE id="wPdO52" name="CircularBuffer.h" compile="0" resource="0"
