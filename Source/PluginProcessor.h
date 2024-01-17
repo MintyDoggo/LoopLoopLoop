@@ -10,21 +10,23 @@
 
 #include <JuceHeader.h>
 #include "CircularBuffer.h"
+#include <fstream>
 
 struct Settings
 {
     double gain{ 1.0 };
-    double grainSize{ 0.2 };
+    double grainSize{ 0.4 };
     double grainPitch{ 0.0 };
     double grainStart{ 0.0 };
-    double historyBufferSize{ 2.0 };
-    double mix { 0.8 };
-    double grainAttack { 0.1 };
-    double grainDecay { 1.0 };
+    double historyBufferSize{ 6.0 };
+    double mix { 1.0 };
+    double grainAttack { 0.15 };
+    double grainDecay { 0.85 };
+    int grainCount { 2 };
     bool grainReverse { false };
+    bool writePause { false };
+    double spread { 0.0 };
 };
-
-Settings getSettings(juce::AudioProcessorValueTreeState& treeState);
 
 //==============================================================================
 /**
@@ -68,17 +70,27 @@ public:
     //==============================================================================
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
+    Settings getSettings(juce::AudioProcessorValueTreeState& treeState);
 
     static double sampleRate;
     
     juce::AudioProcessorValueTreeState treeState;
+    std::atomic<double> amplitude;
+    int peakIndexToPaint = 0; // the index in rectArray that we want to paint
+
+    // for drawing peaks
+    void setDrawingPeaks(double sample);
+    double maxPeak = 0.0; // the current maximum peak value
+    int sampleCounter = 0; // how many samples we've seen so far
+    int detectionLength = 240; // how many samples to check for peak. this does not determine the animation speed.
+    std::vector<CircularBuffer> historyBuffer;
 
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    std::ofstream log;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LoopLoopLoopAudioProcessor)
-    std::vector<CircularBuffer> historyBuffer;
 
 };
 

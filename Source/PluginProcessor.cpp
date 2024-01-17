@@ -8,7 +8,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "Utilities.h"
+#include "Utilities.cpp"
  
 double LoopLoopLoopAudioProcessor::sampleRate; // Provide a default value if necessary
 
@@ -27,13 +27,16 @@ LoopLoopLoopAudioProcessor::LoopLoopLoopAudioProcessor()
 #endif
 {
     historyBuffer.resize(2);
+    log.open("C:\\Users\\dog1\\Desktop\\funny-log-out.txt");
+
 }
 
 LoopLoopLoopAudioProcessor::~LoopLoopLoopAudioProcessor()
 {
+    log.close();
 }
 
-Settings getSettings(juce::AudioProcessorValueTreeState& treeState)
+Settings LoopLoopLoopAudioProcessor::getSettings(juce::AudioProcessorValueTreeState& treeState)
 {
 	Settings settings;
 
@@ -45,7 +48,10 @@ Settings getSettings(juce::AudioProcessorValueTreeState& treeState)
     settings.mix = treeState.getRawParameterValue("mix")->load();
     settings.grainAttack = treeState.getRawParameterValue("grainAttack")->load();
     settings.grainDecay = treeState.getRawParameterValue("grainDecay")->load();
+    settings.grainCount = treeState.getRawParameterValue("grainCount")->load();
     settings.grainReverse = treeState.getRawParameterValue("grainReverse")->load();
+    settings.writePause = treeState.getRawParameterValue("writePause")->load();
+    settings.spread = treeState.getRawParameterValue("spread")->load();
 
 	return settings;
 }
@@ -55,26 +61,32 @@ juce::AudioProcessorValueTreeState::ParameterLayout LoopLoopLoopAudioProcessor::
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> parameters;
 
     // create parameters
-    auto pGain = std::make_unique<juce::AudioParameterFloat>("gain", "Master Gain", 0.0, 1.0, 1.0);
-    auto pGrainSize = std::make_unique<juce::AudioParameterFloat>("grainSize", "Grain Size", 0.0, 1.0, 0.2);
-    auto pGrainPitch = std::make_unique<juce::AudioParameterFloat>("grainPitch", "Grain Pitch", -24.0, 24.0, 0.0);
-    auto pGrainStart = std::make_unique<juce::AudioParameterFloat>("grainStart", "Grain Start", 0.0, 1.0, 0.0);
-    auto pHistoryBufferSize = std::make_unique<juce::AudioParameterFloat>("historyBufferSize", "History Buffer Size", 0.01, 10.0, 2.0);
-    auto pMix = std::make_unique<juce::AudioParameterFloat>("mix", "Mix", 0.0, 1.0, 0.8);
-    auto pGrainAttack = std::make_unique<juce::AudioParameterFloat>("grainAttack", "Grain Attack", 0.0, 1.0, 0.1);
-    auto pGrainDecay = std::make_unique<juce::AudioParameterFloat>("grainDecay", "Grain Decay", 0.0, 1.0, 1.0);
+    auto pMix = std::make_unique<juce::AudioParameterFloat>("mix", "Mix", juce::NormalisableRange<float>(0.0, 1.0), 1.0);
+    auto pGrainStart = std::make_unique<juce::AudioParameterFloat>("grainStart", "Grain Start", juce::NormalisableRange<float>(0.0f, 1.0f), 0.0);
+    auto pGrainSize = std::make_unique<juce::AudioParameterFloat>("grainSize", "Grain Size", juce::NormalisableRange<float>(0.0, 15.0), 0.4);
+    auto pGrainPitch = std::make_unique<juce::AudioParameterFloat>("grainPitch", "Grain Pitch", juce::NormalisableRange<float>(-24.0, 24.0), 0.0);
+    auto pGrainAttack = std::make_unique<juce::AudioParameterFloat>("grainAttack", "Grain Attack", juce::NormalisableRange<float>(0.0, 1.0), 0.15);
+    auto pGrainDecay = std::make_unique<juce::AudioParameterFloat>("grainDecay", "Grain Decay", juce::NormalisableRange<float>(0.0, 1.0), 0.85);
+    auto pGrainCount = std::make_unique<juce::AudioParameterInt>("grainCount", "Grain Count", 1, 16, 2);
+    auto pSpread = std::make_unique<juce::AudioParameterFloat>("spread", "Spread", juce::NormalisableRange<float>(0.0, 1.0), 0.0);
+    auto pWritePause = std::make_unique<juce::AudioParameterBool>("writePause", "Write Pause", false);
     auto pGrainReverse = std::make_unique<juce::AudioParameterBool>("grainReverse", "Grain Reverse", false);
+    auto pHistoryBufferSize = std::make_unique<juce::AudioParameterFloat>("historyBufferSize", "History Buffer Size", juce::NormalisableRange<float>(0.01, 30.0), 6.0);
+    auto pGain = std::make_unique<juce::AudioParameterFloat>("gain", "Master Gain", juce::NormalisableRange<float>(0.0, 1.0), 1.0);
 
     // add parameters to vector
-    parameters.push_back(std::move(pGain));
+    parameters.push_back(std::move(pMix));
+    parameters.push_back(std::move(pGrainStart));
     parameters.push_back(std::move(pGrainSize));
     parameters.push_back(std::move(pGrainPitch));
-    parameters.push_back(std::move(pGrainStart));
-    parameters.push_back(std::move(pHistoryBufferSize));
-    parameters.push_back(std::move(pMix));
     parameters.push_back(std::move(pGrainAttack));
     parameters.push_back(std::move(pGrainDecay));
+    parameters.push_back(std::move(pSpread));
+    parameters.push_back(std::move(pGrainCount));
     parameters.push_back(std::move(pGrainReverse));
+    parameters.push_back(std::move(pWritePause));
+    parameters.push_back(std::move(pHistoryBufferSize));
+    parameters.push_back(std::move(pGain));
 
     return { parameters.begin(), parameters.end() };
 }
@@ -152,23 +164,27 @@ void LoopLoopLoopAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     LoopLoopLoopAudioProcessor::sampleRate = sampleRate;
      
     // set constants
-    const int numGrains = 1;
+    const int maxGrains = 16;
 
     // resize history buffer
     for(int channel = 0; channel < historyBuffer.size(); channel++)
-	{
-		historyBuffer[channel].setSize(settings.historyBufferSize);
+	{   
+        historyBuffer[channel].setSize(30.0); // necessary to prevent subscript out of range error
+		historyBuffer[channel].setUserSize(settings.historyBufferSize);
 		historyBuffer[channel].clear();
-        historyBuffer[channel].grains.resize(numGrains);
+        historyBuffer[channel].grains.resize(maxGrains);
+        historyBuffer[channel].setUserNumGrains(settings.grainCount);
 
         // set grain parameters
-        for (int grain = 0; grain < historyBuffer[channel].getNumGrains(); grain++)
+        for (int grain = 0; grain < maxGrains; grain++)
         {
             historyBuffer[channel].grains[grain].setGrainSize(settings.grainSize);
             historyBuffer[channel].grains[grain].setStartIndex(settings.historyBufferSize * settings.grainStart);
             historyBuffer[channel].grains[grain].setGrainPitch(settings.grainPitch);
         }
 	}
+
+    //detectionLength = historyBuffer[0].getUserSize() / 1028; // no
 
 }
 
@@ -220,49 +236,57 @@ void LoopLoopLoopAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // do the actual processing
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
-        historyBuffer[channel].setSize(settings.historyBufferSize);
         auto* channelData = buffer.getWritePointer (channel);
 
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
 		{
+            historyBuffer[channel].setUserSize(settings.historyBufferSize);
+            historyBuffer[channel].writePause = settings.writePause;
+            historyBuffer[channel].setUserNumGrains(settings.grainCount);
+            //log << "settings.grainCount: " << settings.grainCount << std::endl;
+
+            setDrawingPeaks(channelData[sample]);
+
             // write sample to history buffer
             historyBuffer[channel].write(channelData[sample]);
             // apply mix
             channelData[sample] *= (1.0 - settings.mix);
 
-            // read each grain from history buffer
-            for(int grain = 0; grain < historyBuffer[channel].getNumGrains(); grain++)
+            // TODO: make callback for grain count change, update grain parameters so that the offsets offset in regards to the first grain
+
+            // read each grain from history buffer (right now l and r channel use same grain settings so this can be optimized)
+            for(int grain = 0; grain < historyBuffer[channel].getUserNumGrains(); grain++)
 			{
+                double spreadFactor;
+                
+                if(grain % 2 == 0)
+                {
+                    spreadFactor = settings.spread * double(grain);
+				}
+                else
+                {
+					spreadFactor = settings.spread * double(grain) * -1;
+				}
+
+                //log << "GRAIN: " << grain << std::endl;
+
                 // set grain parameters
                 historyBuffer[channel].grains[grain].setGrainSize(settings.grainSize);
-                historyBuffer[channel].grains[grain].setStartIndex(settings.historyBufferSize * settings.grainStart);
+                historyBuffer[channel].grains[grain].setStartIndex((settings.historyBufferSize * settings.grainStart) - spreadFactor);
                 historyBuffer[channel].grains[grain].setGrainPitch(settings.grainPitch);
                 historyBuffer[channel].grains[grain].setAttack(settings.grainAttack);
                 historyBuffer[channel].grains[grain].setDecay(settings.grainDecay);
-                historyBuffer[channel].grains[grain].setReverse(settings.grainReverse);
+                historyBuffer[channel].grains[grain].setReverse(settings.grainReverse); 
+                historyBuffer[channel].grains[grain].setReadOffset(double(grain));
 
 				// get read index for grain
-				const int grainReadIndex = historyBuffer[channel].grains[grain].getReadIndex();
+				double grainReadIndex = historyBuffer[channel].grains[grain].getReadIndex();
+                wrapReadIndexToBuffer(grainReadIndex, secondsToSamples(historyBuffer[channel].getUserSizeInSeconds()));
+
+                const double grainGainFactor = historyBuffer[channel].grains[grain].getGainFactor();
 
 				// read sample from history buffer
-                double attackMultiplier = 1.0;
-                double decayMultiplier = 1.0;
-
-                // if not passed point of attack, apply attack multiplier
-                if (historyBuffer[channel].grains[grain].getAttack() > historyBuffer[channel].grains[grain].getProgress())
-                {
-                    const double attackProgress = 1.0 - (historyBuffer[channel].grains[grain].getAttack() - historyBuffer[channel].grains[grain].getProgress());
-                    attackMultiplier = linearInterpolation(0.0, 1.0, attackProgress);
-                }
-
-                // if passed point of decay, apply decay multiplier
-                if (historyBuffer[channel].grains[grain].getDecay() < historyBuffer[channel].grains[grain].getProgress())
-                {
-                    const double decayProgress = (historyBuffer[channel].grains[grain].getProgress() - historyBuffer[channel].grains[grain].getDecay()) / (1.0 - historyBuffer[channel].grains[grain].getDecay());
-                    decayMultiplier = linearInterpolation(1.0, 0.0, decayProgress);
-				}
-
-				const double grainSample = (historyBuffer[channel].read(grainReadIndex) * attackMultiplier * decayMultiplier) * settings.mix;
+				const double grainSample = (historyBuffer[channel].read(grainReadIndex) * grainGainFactor) * settings.mix;
 
 				// write sample to output buffer
 				channelData[sample] += grainSample;
@@ -285,8 +309,8 @@ bool LoopLoopLoopAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* LoopLoopLoopAudioProcessor::createEditor()
 {
-    //return new LoopLoopLoopAudioProcessorEditor (*this);
-    return new juce::GenericAudioProcessorEditor(*this);
+    return new LoopLoopLoopAudioProcessorEditor (*this);
+    //return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
@@ -303,9 +327,29 @@ void LoopLoopLoopAudioProcessor::setStateInformation (const void* data, int size
     // whose contents will have been created by the getStateInformation() call.
 }
 
+void LoopLoopLoopAudioProcessor::setDrawingPeaks(double sample)
+{
+    const float absoluteSample = std::abs(sample);
+
+    // get max peak of buffer
+    if (absoluteSample > maxPeak)
+    {
+        maxPeak = sample;
+    }
+    ++sampleCounter;
+
+    if (sampleCounter / 2 >= detectionLength)
+    {
+        amplitude = maxPeak;
+        maxPeak = 0.0;
+        sampleCounter = 0;
+    }
+}
+
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new LoopLoopLoopAudioProcessor();
 }
+
