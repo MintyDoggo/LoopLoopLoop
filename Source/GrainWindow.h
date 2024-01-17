@@ -14,6 +14,8 @@ public:
 
 	void setGrainPitch(double semitones);
 
+	double getPlaybackSpeed();
+
 	void setGrainSize(double size);
 
 	void setAttack(double attack);
@@ -32,6 +34,9 @@ public:
 
 	void setReadOffset(double offset);
 
+	void setSemitoneMode(bool mode);
+	bool getSemitoneMode();
+
 private:
 	double startIndex;
 	double readIndex;
@@ -42,4 +47,5 @@ private:
 	double playbackSpeed;
 	double progress; // progress of the grain from 0 to 1
 	bool reverse;
+	bool semitoneMode;
 };

@@ -10,7 +10,7 @@ CircularBuffer::CircularBuffer()
 	userSize = secondsToSamples(2.0);
 	buffer.resize(secondsToSamples(10.0));
 	writePause = false;
-	userNumGrains = 2;
+	userNumGrains = 1;
 }
 
 void CircularBuffer::write(double sample)

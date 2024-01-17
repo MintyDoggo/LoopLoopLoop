@@ -22,10 +22,11 @@ struct Settings
     double mix { 1.0 };
     double grainAttack { 0.15 };
     double grainDecay { 0.85 };
-    int grainCount { 2 };
+    int grainCount { 1 };
     bool grainReverse { false };
     bool writePause { false };
     double spread { 0.0 };
+    bool semitoneMode { true };
 };
 
 //==============================================================================

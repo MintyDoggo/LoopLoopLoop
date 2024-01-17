@@ -50,7 +50,7 @@ void LoopLoopLoopAudioProcessorEditor::paint (juce::Graphics& g)
     //g.drawFittedText ("Hello World!", getLocalBounds(), juce::Justification::centred, 1);
 
     //log << "FPS: " << getFPS() << std::endl;
-    g.fillAll(juce::Colours::black);
+    g.fillAll(juce::Colour::fromFloatRGBA(0.098f, 0.098f, 0.110f, 1.0f));
     paintWaveform(g);
     paintGrainWindow(g);
     //paintVerticalLine(g);
@@ -104,7 +104,7 @@ void LoopLoopLoopAudioProcessorEditor::paintWaveform(juce::Graphics& g)
 
     for (int i = 0; i < width; i++)
     {
-        g.setColour(juce::Colours::lightblue);
+        g.setColour(juce::Colour::fromFloatRGBA(0.55f, 0.55f, 0.55f, 1.0f));
         //g.fillRect(i, height - rectArray[i], 1, rectArray[i]);
 
         juce::Line<float> line;
@@ -153,12 +153,9 @@ void LoopLoopLoopAudioProcessorEditor::paintGrainWindow(juce::Graphics& g)
 
     const int writeHead = audioProcessor.historyBuffer[0].getProgress() * width;
 
-    // paint the grain window on top of the waveform using settings from the processor
-    g.setColour(juce::Colours::white);
-
-    // draw window with 4 lines
-    g.drawLine(grainStart, padding, grainStart, height, 1);
-    g.drawLine(grainEnd, padding, grainEnd, height, 1);
+    // draw area where grains are read from
+    g.setColour(juce::Colour::fromFloatRGBA(0.447f, 0.537f, 0.855f, 1.0f));
+    g.drawLine(grainStart, height + padding / 2, grainEnd, height + padding / 2, 2);
 
     // TODO: Make stereo
     // paint each grain window read index, height is determined by the gain factor and is centered around the middle of the window
@@ -182,7 +179,7 @@ void LoopLoopLoopAudioProcessorEditor::paintGrainWindow(juce::Graphics& g)
 
     // paint the write index
     g.setColour(juce::Colours::white);
-    g.drawLine(writeHead, 0, writeHead, height + padding, 3);
+    g.drawLine(writeHead, 0, writeHead, height + padding, 2);
 }
 
 void LoopLoopLoopAudioProcessorEditor::paintVerticalLine(juce::Graphics& g)

@@ -13,6 +13,7 @@ GrainWindow::GrainWindow()
 	progress = 0.0;
 	reverse = false;
 	readOffset = 0.0;
+	semitoneMode = true;
 }
 
 // warning: this function will return a value outside of the bounds of the user size
@@ -54,17 +55,29 @@ void GrainWindow::setStartIndex(double start)
 	startIndex = secondsToSamples(start);
 }
 
-void GrainWindow::setGrainPitch(double semitones)
+void GrainWindow::setGrainPitch(double speed)
 {
-	if (!reverse)
+	if (semitoneMode)
 	{
-		playbackSpeed = semitonesToPlaybackRate(semitones);
+		if (!reverse)
+		{
+			playbackSpeed = semitonesToPlaybackRate(speed);
+			return;
+		}
+
+		if (reverse)
+		{
+			playbackSpeed = semitonesToPlaybackRate(speed) * -1;
+			return;
+		}
 	}
 
-	if (reverse)
-	{
-		playbackSpeed = semitonesToPlaybackRate(semitones) * -1;
-	}
+	playbackSpeed = speed;
+}
+
+double GrainWindow::getPlaybackSpeed()
+{
+	return playbackSpeed;
 }
 
 void GrainWindow::setGrainSize(double size)
@@ -129,6 +142,16 @@ void GrainWindow::setReadOffset(double offset)
 	offset = secondsToSamples(offset);
 	readOffset = offset;
 }
+
+void GrainWindow::setSemitoneMode(bool mode)
+{
+	semitoneMode = mode;
+}
+
+bool GrainWindow::getSemitoneMode()
+{
+	return semitoneMode;
+};
 
 
 // -------------------------- GrainWindow -----------------------------------------------------
