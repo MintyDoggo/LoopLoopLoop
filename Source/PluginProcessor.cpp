@@ -248,7 +248,8 @@ void LoopLoopLoopAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             historyBuffer[channel].setUserNumGrains(settings.grainCount);
             //log << "settings.grainCount: " << settings.grainCount << std::endl;
 
-            setDrawingPeaks(channelData[sample]);
+            calculateDetectionLength(LoopLoopLoopAudioProcessor::sampleRate, historyBuffer[channel].getUserSizeInSeconds());
+            calculateRMS(channelData[sample], sample % 2);
 
             // write sample to history buffer
             historyBuffer[channel].write(channelData[sample]);
@@ -339,23 +340,31 @@ void LoopLoopLoopAudioProcessor::setStateInformation (const void* data, int size
     // whose contents will have been created by the getStateInformation() call.
 }
 
-void LoopLoopLoopAudioProcessor::setDrawingPeaks(double sample)
+void LoopLoopLoopAudioProcessor::calculateRMS(double sample, int shouldIncrement)
 {
-    const float absoluteSample = std::abs(sample);
+    RMSCombinedSum += (sample * sample); // add squared sample to sum
 
-    // get max peak of buffer
-    if (absoluteSample > maxPeak)
+    if (sampleCounter >= detectionLength)
     {
-        maxPeak = sample;
-    }
-    ++sampleCounter;
+        //RMSCombinedSum *= 0.5; // divide sum by 2
+        double meanSquared = RMSCombinedSum / detectionLength; // divide sum by detection length to get mean squared
+        RMSValue = std::sqrt(meanSquared); // calculate and set rms
+        amplitude = RMSValue; // set amplitude
 
-    if (sampleCounter / 2 >= detectionLength)
+		RMSCombinedSum = 0.0;
+		sampleCounter = 0;
+	}
+    else if (shouldIncrement == 1)
     {
-        amplitude = maxPeak;
-        maxPeak = 0.0;
-        sampleCounter = 0;
-    }
+		sampleCounter++; // increment counter
+	}
+}
+
+void LoopLoopLoopAudioProcessor::calculateDetectionLength(double sampleRate, double historyBufferSize)
+{
+    const double scaleFactor = 0.003;
+	detectionLength = sampleRate * historyBufferSize * scaleFactor;
+    //log << "detectionLength: " << detectionLength << std::endl;
 }
 
 //==============================================================================

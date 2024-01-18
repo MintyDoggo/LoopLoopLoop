@@ -80,11 +80,14 @@ public:
     int peakIndexToPaint = 0; // the index in rectArray that we want to paint
 
     // for drawing peaks
-    void setDrawingPeaks(double sample);
-    double maxPeak = 0.0; // the current maximum peak value
+    void calculateRMS(double sample, int shouldIncrement);
+    void calculateDetectionLength(double sampleRate, double historyBufferSize);
+    double RMSCombinedSum = 0.0; // sum of l and r channel
+    double RMSValue = 0.0; // rms of l and r channel
     int sampleCounter = 0; // how many samples we've seen so far
-    int detectionLength = 240; // how many samples to check for peak. this does not determine the animation speed.
+    int detectionLength = 0; // how many samples to sum for RMS. this does not determine the animation speed.
     std::vector<CircularBuffer> historyBuffer;
+
 
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();

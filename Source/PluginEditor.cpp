@@ -68,9 +68,9 @@ void LoopLoopLoopAudioProcessorEditor::resized()
 
 void LoopLoopLoopAudioProcessorEditor::paintWaveform(juce::Graphics& g)
 {
-    //painting the histogram
+    //painting the waveform
     const int ampHeight = static_cast<int>(audioProcessor.amplitude * (height / 2 - padding));
-    const int indexToPaint = static_cast<int>(audioProcessor.historyBuffer[0].getProgress() * double(width)) - 1;
+    const int indexToPaint = static_cast<int>(audioProcessor.historyBuffer[0].getProgress() * double(width)) - 1; // todo: static cast instead of function style cast
     
     if (previousIndexToPaint <= indexToPaint)
     {
@@ -107,7 +107,20 @@ void LoopLoopLoopAudioProcessorEditor::paintWaveform(juce::Graphics& g)
         g.setColour(juce::Colour::fromFloatRGBA(0.55f, 0.55f, 0.55f, 1.0f));
         //g.fillRect(i, height - rectArray[i], 1, rectArray[i]);
 
-        juce::Line<float> line;
+        int x1 = i;
+        int y1 = (height / 2 + padding / 2) - rectArray[i];
+        int x2 = i;
+        int y2 = (height / 2 + padding / 2) + rectArray[i];
+
+        if (i <= width)
+        {
+            x2 = i + 1;
+            y2 = (height / 2 + padding / 2) + rectArray[i + 1];
+        }
+
+        g.drawLine(x1, y1, x2, y2, 1);
+
+       /* juce::Line<float> line;
 
         line.setStart(i, (height / 2 + padding / 2) - rectArray[i]);
 
@@ -121,7 +134,7 @@ void LoopLoopLoopAudioProcessorEditor::paintWaveform(juce::Graphics& g)
 		}
 
 
-        g.drawLine(line);
+        g.drawLine(line);*/
     }
 
     previousIndexToPaint = indexToPaint;
