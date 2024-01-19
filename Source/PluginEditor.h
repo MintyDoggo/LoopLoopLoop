@@ -12,6 +12,14 @@
 #include "PluginProcessor.h"
 #include <fstream>
 
+struct CustomTextSlider : juce::Slider
+{
+    CustomTextSlider() : juce::Slider(juce::Slider::SliderStyle::RotaryHorizontalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
+	{
+	}
+};
+
+
 //==============================================================================
 /**
 */
@@ -46,12 +54,13 @@ private:
     LoopLoopLoopAudioProcessor& audioProcessor;
     juce::OpenGLContext openGLContext;
 
-    const int width = 960;
-    const int height = 90;
-    int rectArray[960] = { 0 };
+    const int width = 840;
+    const int topPanelHeight = 105;
+    const int bottomPanelHeight = 35;
+
+    int rectArray[1920] = { 0 };
     int previousIndexToPaint = 0;
     juce::VBlankAttachment vBlankAttachment{ this, [this] { update(); } };
-    const int padding = 10;
     int paintCount = 0;
 
     juce::Time time;
@@ -98,7 +107,13 @@ private:
         juce::Colour::fromFloatRGBA(0.36f, 0.11f, 0.61f, 1.0f),
     };
 
+    // Slider definitions
+    CustomTextSlider
+        grainPitchSlider,
+        grainSizeSlider,
+        grainSpreadSlider;
 
+    std::vector<juce::Component*> getComponents();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LoopLoopLoopAudioProcessorEditor)
 };
