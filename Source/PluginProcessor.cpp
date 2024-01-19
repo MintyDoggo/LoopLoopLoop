@@ -71,7 +71,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout LoopLoopLoopAudioProcessor::
     auto pGrainPitch = std::make_unique<juce::AudioParameterFloat>("grainPitch", "Grain Pitch", juce::NormalisableRange<float>(-24.0, 24.0), 0.0);
     auto pGrainAttack = std::make_unique<juce::AudioParameterFloat>("grainAttack", "Grain Attack", juce::NormalisableRange<float>(0.0, 1.0), 0.15);
     auto pGrainDecay = std::make_unique<juce::AudioParameterFloat>("grainDecay", "Grain Decay", juce::NormalisableRange<float>(0.0, 1.0), 0.85);
-    auto pGrainCount = std::make_unique<juce::AudioParameterInt>("grainCount", "Grain Count", 1, MAX_NUM_GRAINS, 1);
+    auto pGrainCount = std::make_unique<juce::AudioParameterInt>("grainCount", "Grain Count", 0, MAX_NUM_GRAINS, 1);
     auto pSpread = std::make_unique<juce::AudioParameterFloat>("spread", "Spread", juce::NormalisableRange<float>(0.0, 1.0), 0.0);
     auto pGrainReverse = std::make_unique<juce::AudioParameterBool>("grainReverse", "Grain Reverse", false);
     auto pUseSemitones = std::make_unique<juce::AudioParameterBool>("useSemitones", "Use Semitones", true);

@@ -11,14 +11,7 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include <fstream>
-
-struct CustomTextSlider : juce::Slider
-{
-    CustomTextSlider() : juce::Slider(juce::Slider::SliderStyle::RotaryHorizontalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
-	{
-	}
-};
-
+#include "TextSlider.h"
 
 //==============================================================================
 /**
@@ -41,8 +34,6 @@ public:
 
     void paintGrainWindow(juce::Graphics&);
 
-    void paintVerticalLine(juce::Graphics&);
-    void seizureTest(juce::Graphics& g);
     void paintFPS(juce::Graphics& g);
 
     std::ofstream log;
@@ -107,11 +98,21 @@ private:
         juce::Colour::fromFloatRGBA(0.36f, 0.11f, 0.61f, 1.0f),
     };
 
-    // Slider definitions
-    CustomTextSlider
+    // Slider definitions and attachments
+    TextSlider
         grainPitchSlider,
         grainSizeSlider,
-        grainSpreadSlider;
+        grainSpreadSlider,
+        grainCountSlider;
+
+    using APVTS = juce::AudioProcessorValueTreeState;
+    using Attachment = APVTS::SliderAttachment;
+
+    Attachment
+		grainPitchSliderAttachment,
+		grainSizeSliderAttachment,
+		grainSpreadSliderAttachment,
+        grainCountSliderAttachment;
 
     std::vector<juce::Component*> getComponents();
 

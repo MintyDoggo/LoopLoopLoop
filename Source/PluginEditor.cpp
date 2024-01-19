@@ -12,7 +12,16 @@
 
 //==============================================================================
 LoopLoopLoopAudioProcessorEditor::LoopLoopLoopAudioProcessorEditor (LoopLoopLoopAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+    : AudioProcessorEditor (&p), audioProcessor (p),
+    grainPitchSlider(*audioProcessor.treeState.getParameter("grainPitch"), "Semitones"),
+    grainSizeSlider(*audioProcessor.treeState.getParameter("grainSize"), "Seconds"),
+    grainSpreadSlider(*audioProcessor.treeState.getParameter("spread"), "idk"),
+    grainCountSlider(*audioProcessor.treeState.getParameter("grainCount"), "Grains"),
+
+    grainPitchSliderAttachment(audioProcessor.treeState, "grainPitch", grainPitchSlider),
+    grainSizeSliderAttachment(audioProcessor.treeState, "grainSize", grainSizeSlider),
+    grainSpreadSliderAttachment(audioProcessor.treeState, "spread", grainSpreadSlider),
+    grainCountSliderAttachment(audioProcessor.treeState, "grainCount", grainCountSlider)
 {
     
     startTimerHz(240);
@@ -241,32 +250,6 @@ void LoopLoopLoopAudioProcessorEditor::paintGrainWindow(juce::Graphics& g)
     g.drawLine(writeHead, 0, writeHead, localHeight, 2);
 }
 
-void LoopLoopLoopAudioProcessorEditor::paintVerticalLine(juce::Graphics& g)
-{
-	g.setColour(juce::Colours::white);
-    g.drawVerticalLine(paintCount % width, 0, topPanelHeight);
-}
-
-void LoopLoopLoopAudioProcessorEditor::seizureTest(juce::Graphics& g)
-{
- //   if (paintCount % 4 == 0)
- //   {
- //       g.fillAll(juce::Colours::black);
-	//}
- //   else if (paintCount % 4 == 1)
- //   {
-	//	g.setColour(juce::Colours::red);
-	//}
- //   else if (paintCount % 4 == 2)
- //   {
-	//	g.setColour(juce::Colours::green);
-	//}
-	//else if (paintCount % 4 == 3)
- //   {
-	//	g.setColour(juce::Colours::blue);
- //   }
-}
-
 double LoopLoopLoopAudioProcessorEditor::getFPS()
 {
     double elapsedTime = juce::Time::getMillisecondCounterHiRes() - startTime;
@@ -290,5 +273,6 @@ std::vector<juce::Component*> LoopLoopLoopAudioProcessorEditor::getComponents()
         &grainPitchSlider,
         &grainSizeSlider,
         &grainSpreadSlider,
+        &grainCountSlider
     };
 }
