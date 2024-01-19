@@ -6,46 +6,29 @@ class GrainWindow
 public:
 	GrainWindow();
 
+	void setReadIndex(double index);
 	double getReadIndex();
-
 	void incrementReadIndex();
+
+	void setReadOffset(double offset);
 
 	void setStartIndex(double start);
 
 	void setGrainPitch(double semitones);
 
-	double getPlaybackSpeed();
-
-	void setGrainSize(double size);
-
-	void setAttack(double attack);
-	double getAttack();
-
-	void setDecay(double decay);
-	double getDecay();
-
-	double getProgress();
-
-	void setReverse(bool reverse);
-
-	void setReadIndex(double index);
-
 	double getGainFactor();
 
-	void setReadOffset(double offset);
-
-	void setSemitoneMode(bool mode);
-	bool getSemitoneMode();
+	// if there is special get or set functions, put them as private
+	double size;
+	double attack;
+	double decay;
+	double progress; // progress of the grain from 0 to 1
+	bool reverse;
+	bool semitoneMode;
 
 private:
 	double startIndex;
 	double readIndex;
 	double readOffset;
-	double size;
-	double attack;
-	double decay;
 	double playbackSpeed;
-	double progress; // progress of the grain from 0 to 1
-	bool reverse;
-	bool semitoneMode;
 };

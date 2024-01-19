@@ -6,7 +6,7 @@
 CircularBuffer::CircularBuffer()
 {
 	writeIndex = 0;
-	grains.resize(32);
+	grains.resize(128);
 	userSize = secondsToSamples(2.0);
 	buffer.resize(secondsToSamples(10.0));
 	writePause = false;
@@ -34,14 +34,19 @@ double CircularBuffer::read(double index)
 	return sample;
 }
 
+void CircularBuffer::setSize(double sizeInSeconds)
+{
+	buffer.resize(secondsToSamples(sizeInSeconds));
+}
+
 int CircularBuffer::getSize()
 {
 	return buffer.size();
 }
 
-void CircularBuffer::setSize(double sizeInSeconds)
+void CircularBuffer::setUserSize(double size)
 {
-	buffer.resize(secondsToSamples(sizeInSeconds));
+	userSize = secondsToSamples(size);
 }
 
 double CircularBuffer::getUserSizeInSeconds()
@@ -49,9 +54,9 @@ double CircularBuffer::getUserSizeInSeconds()
 	return samplesToSeconds(userSize);
 }
 
-void CircularBuffer::setUserSize(double size)
+double CircularBuffer::getProgress()
 {
-	userSize = secondsToSamples(size);
+	return double(writeIndex) / double(userSize);
 }
 
 void CircularBuffer::clear()
@@ -60,29 +65,4 @@ void CircularBuffer::clear()
 	{
 		buffer[i] = 0;
 	}
-}
-
-int CircularBuffer::getWriteIndex()
-{
-	return writeIndex;
-}
-
-int CircularBuffer::getNumGrains()
-{
-	return grains.size();
-}
-
-double CircularBuffer::getProgress()
-{
-	return double(writeIndex) / double(userSize);
-}
-
-void CircularBuffer::setUserNumGrains(int numGrains)
-{
-	userNumGrains = numGrains;
-}
-
-int CircularBuffer::getUserNumGrains()
-{
-	return userNumGrains;
 }

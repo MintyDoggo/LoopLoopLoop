@@ -8,33 +8,22 @@ public:
 	CircularBuffer();
 
 	void write(double sample);
-
 	double read(double index);
 
-	int getSize();
 	void setSize(double size);
-	double getUserSizeInSeconds();
+	int getSize();
 	void setUserSize(double size);
-
-	void clear();
-
-	int getWriteIndex();
-
-	int getNumGrains();
+	double getUserSizeInSeconds();
 
 	double getProgress();
-
-	void setUserNumGrains(int numGrains);
-	int getUserNumGrains();
-
+	void clear();
 
 	std::vector<GrainWindow> grains;
 	bool writePause;
+	int userNumGrains;
 
 private:
 	std::vector<double> buffer;
 	int writeIndex;
-	int userNumGrains;
 	int userSize;
 };
-

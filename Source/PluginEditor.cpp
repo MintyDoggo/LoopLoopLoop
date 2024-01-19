@@ -8,11 +8,13 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include <jive_layouts/jive_layouts.h>
 
 //==============================================================================
 LoopLoopLoopAudioProcessorEditor::LoopLoopLoopAudioProcessorEditor (LoopLoopLoopAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
+    
     startTimerHz(240);
     log.open("C:\\Users\\dog1\\Desktop\\funny-log-out.txt");
     setSize(width, height + 10);
@@ -172,7 +174,7 @@ void LoopLoopLoopAudioProcessorEditor::paintGrainWindow(juce::Graphics& g)
 
     // TODO: Make stereo
     // paint each grain window read index, height is determined by the gain factor and is centered around the middle of the window
-    for (int i = 0; i < audioProcessor.historyBuffer[0].getUserNumGrains(); i++)
+    for (int i = 0; i < audioProcessor.historyBuffer[0].userNumGrains; i++)
     {
         //const int playHead = static_cast<int>(grainStart + (width * (grainEndPercentage - grainStartPercentage) * audioProcessor.historyBuffer[0].grains[i].getProgress())) % width;
         

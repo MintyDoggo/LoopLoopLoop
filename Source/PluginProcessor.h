@@ -50,7 +50,8 @@ public:
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
     //==============================================================================
-    juce::AudioProcessorEditor* createEditor() override;
+
+
     bool hasEditor() const override;
 
     //==============================================================================
@@ -67,6 +68,7 @@ public:
     void setCurrentProgram (int index) override;
     const juce::String getProgramName (int index) override;
     void changeProgramName (int index, const juce::String& newName) override;
+    juce::AudioProcessorEditor* createEditor() override;
 
     //==============================================================================
     void getStateInformation (juce::MemoryBlock& destData) override;
@@ -78,6 +80,7 @@ public:
     juce::AudioProcessorValueTreeState treeState;
     std::atomic<double> amplitude;
     int peakIndexToPaint = 0; // the index in rectArray that we want to paint
+    double grainGainNormalizer = 0.0;
 
     // for drawing peaks
     void calculateRMS(double sample, int shouldIncrement);
@@ -87,7 +90,6 @@ public:
     int sampleCounter = 0; // how many samples we've seen so far
     int detectionLength = 0; // how many samples to sum for RMS. this does not determine the animation speed.
     std::vector<CircularBuffer> historyBuffer;
-
 
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();

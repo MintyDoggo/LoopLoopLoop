@@ -1,7 +1,6 @@
 #include "GrainWindow.h"
 
 // -------------------------- GrainWindow -----------------------------------------------------
-// TODO: StartIndex is not used
 GrainWindow::GrainWindow()
 {
 	startIndex = 0.0;
@@ -16,18 +15,21 @@ GrainWindow::GrainWindow()
 	semitoneMode = true;
 }
 
+void GrainWindow::setReadIndex(double index)
+{
+	readIndex = secondsToSamples(index);
+}
+
 // warning: this function will return a value outside of the bounds of the user size
 double GrainWindow::getReadIndex()
 {
 	const double realIndex = readIndex + readOffset;
-
 	return realIndex;
 }
 
 void GrainWindow::incrementReadIndex()
 {
 	readIndex += playbackSpeed;
-	//progress = (readIndex - startIndex) / secondsToSamples(size);
 
 	const double normalizedOffsetReadIndex = (readIndex - startIndex + readOffset);
 	progress = normalizedOffsetReadIndex / secondsToSamples(size);
@@ -47,6 +49,12 @@ void GrainWindow::incrementReadIndex()
 		progress = 0.0; // progress should maybe be 1.0
 		return;
 	}
+}
+
+void GrainWindow::setReadOffset(double offset)
+{
+	offset = secondsToSamples(offset);
+	readOffset = offset;
 }
 
 // When calling this function, make sure that the index is within the bounds of the buffer
@@ -75,50 +83,6 @@ void GrainWindow::setGrainPitch(double speed)
 	playbackSpeed = speed;
 }
 
-double GrainWindow::getPlaybackSpeed()
-{
-	return playbackSpeed;
-}
-
-void GrainWindow::setGrainSize(double size)
-{
-	this->size = size;
-}
-
-void GrainWindow::setAttack(double attack)
-{
-	this->attack = attack;
-}
-
-double GrainWindow::getAttack()
-{
-	return attack;
-}
-
-void GrainWindow::setDecay(double decay)
-{
-	this->decay = decay;
-}
-
-double GrainWindow::getDecay()
-{
-	return decay;
-}
-
-double GrainWindow::getProgress()
-{
-	return progress;
-}
-
-void GrainWindow::setReverse(bool reverse)
-{
-	this->reverse = reverse;
-}
-
-void GrainWindow::setReadIndex(double index)
-{
-	readIndex = secondsToSamples(index);
-}
 
 double GrainWindow::getGainFactor()
 {
@@ -136,22 +100,3 @@ double GrainWindow::getGainFactor()
 		return 1.0;
 	}
 }
-
-void GrainWindow::setReadOffset(double offset)
-{
-	offset = secondsToSamples(offset);
-	readOffset = offset;
-}
-
-void GrainWindow::setSemitoneMode(bool mode)
-{
-	semitoneMode = mode;
-}
-
-bool GrainWindow::getSemitoneMode()
-{
-	return semitoneMode;
-};
-
-
-// -------------------------- GrainWindow -----------------------------------------------------
