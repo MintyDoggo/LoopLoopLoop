@@ -25,7 +25,7 @@ void CircularBuffer::write(double sample)
 double CircularBuffer::read(double index)
 {
 	// wrap index if out of bounds
-	wrapReadIndexToBuffer(index, userSize);
+	index = wrapReadIndexToBuffer(index, userSize);
 
 	const int firstIndex = int(std::floor(index));
 	const int nextIndex = (firstIndex + 1);

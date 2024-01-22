@@ -102,7 +102,7 @@ private:
     TextSlider
         grainPitchSlider,
         grainSizeSlider,
-        grainSpreadSlider,
+        grainPositionRandomSlider,
         grainCountSlider;
 
     using APVTS = juce::AudioProcessorValueTreeState;
@@ -111,7 +111,7 @@ private:
     Attachment
 		grainPitchSliderAttachment,
 		grainSizeSliderAttachment,
-		grainSpreadSliderAttachment,
+		grainPositionRandomSliderAttachment,
         grainCountSliderAttachment;
 
     std::vector<juce::Component*> getComponents();

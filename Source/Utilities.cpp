@@ -1,6 +1,7 @@
 #include "Utilities.h"
 #include "PluginProcessor.h"
 #include <cmath>
+#include <random>
 
 double secondsToSamples(double seconds)
 {
@@ -34,10 +35,27 @@ double semitonesToPlaybackRate(double semitones)
 	return std::pow(2.0, semitones / 12.0);
 }
 
-void wrapReadIndexToBuffer(double& readIndex, int bufferSize)
+double wrapReadIndexToBuffer(double readIndex, double bufferSize)
 {
-	if(readIndex < 0.0)
+	if (readIndex < 0.0)
+	{
 		readIndex = bufferSize - std::abs(std::fmod(readIndex, bufferSize));
-	else
-		readIndex = std::abs(std::fmod(readIndex, bufferSize));
+		return readIndex;
+	}
+
+	return readIndex = std::abs(std::fmod(readIndex, bufferSize));
+}
+
+double getRandomDouble(double min, double max) 
+{
+	double ran = (double)rand() / RAND_MAX;
+	return min + ran * (max - min);
+}
+
+double clampToClosestSemitone(double pitch)
+{
+	const double semitone = 1.0 / 12.0;
+	const double semitoneOffset = std::fmod(pitch, semitone);
+	const double semitoneClamped = pitch - semitoneOffset;
+	return semitoneClamped;
 }

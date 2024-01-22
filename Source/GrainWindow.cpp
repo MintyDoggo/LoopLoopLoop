@@ -13,7 +13,13 @@ GrainWindow::GrainWindow()
 	reverse = false;
 	readOffset = 0.0;
 	semitoneMode = true;
+	randomStartOffset = 0.0;
+	grainHasReset = true;
+	pitchRandom = 0.0;
+
+	log.open("C:\\Users\\dog1\\Desktop\\funny-log-out.txt");
 }
+
 
 void GrainWindow::setReadIndex(double index)
 {
@@ -23,7 +29,7 @@ void GrainWindow::setReadIndex(double index)
 // warning: this function will return a value outside of the bounds of the user size
 double GrainWindow::getReadIndex()
 {
-	const double realIndex = readIndex + readOffset;
+	const double realIndex = readIndex + readOffset + randomStartOffset;
 	return realIndex;
 }
 
@@ -31,33 +37,41 @@ void GrainWindow::incrementReadIndex()
 {
 	readIndex += playbackSpeed;
 
-	const double normalizedOffsetReadIndex = (readIndex - startIndex + readOffset);
-	progress = normalizedOffsetReadIndex / secondsToSamples(size);
+	const double normalizedOffsetReadIndex = (readIndex - startIndex + readOffset); // for example, if read index is 1300 and start index is 1000, normalizedOffsetReadIndex is 300
+	progress = normalizedOffsetReadIndex / secondsToSamples(size); 
 
-	// for positive playback speeds
+	// for positive playback speeds, if it has reset
 	if (readIndex - startIndex + readOffset >= secondsToSamples(size))
 	{
 		readIndex = readIndex - secondsToSamples(size);
 		progress = 0.0;
+		grainHasReset = true;
 		return;
 	}
 
-	// for negative playback speeds
+	// for negative playback speeds, if it has reset
 	if (readIndex + readOffset < 0.0 + startIndex)
 	{
 		readIndex = readIndex + secondsToSamples(size);
 		progress = 0.0; // progress should maybe be 1.0
+		grainHasReset = true;
 		return;
 	}
+
+	grainHasReset = false;
 }
 
 void GrainWindow::setReadOffset(double offset)
 {
-	offset = secondsToSamples(offset);
-	readOffset = offset;
+	readOffset = secondsToSamples(offset);
 }
 
-// When calling this function, make sure that the index is within the bounds of the buffer
+void GrainWindow::setRandomStartOffset(double offset)
+{
+	randomStartOffset = secondsToSamples(offset);
+}
+
+// be careful not to set start index to a value outside of the user size
 void GrainWindow::setStartIndex(double start)
 {
 	startIndex = secondsToSamples(start);
@@ -69,24 +83,23 @@ void GrainWindow::setGrainPitch(double speed)
 	{
 		if (!reverse)
 		{
-			playbackSpeed = semitonesToPlaybackRate(speed);
+			playbackSpeed = semitonesToPlaybackRate(speed + pitchRandom);
 			return;
 		}
 
 		if (reverse)
 		{
-			playbackSpeed = semitonesToPlaybackRate(speed) * -1;
+			playbackSpeed = semitonesToPlaybackRate(speed + pitchRandom) * -1;
 			return;
 		}
 	}
 
-	playbackSpeed = speed;
+	playbackSpeed = speed + pitchRandom;
 }
-
 
 double GrainWindow::getGainFactor()
 {
-	// this makes it so the decay is applied after the attack, they dont overlap
+	// this makes it so the decay is applied after the attack, they can overlap but only one is applied at a time
 	if (progress < attack)
 	{
 		return progress / attack;

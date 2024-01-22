@@ -1,6 +1,6 @@
 #include <JuceHeader.h>
 #include "Utilities.h"
-
+#include <fstream>
 class GrainWindow
 {
 public:
@@ -11,6 +11,7 @@ public:
 	void incrementReadIndex();
 
 	void setReadOffset(double offset);
+	void setRandomStartOffset(double offset);
 
 	void setStartIndex(double start);
 
@@ -25,10 +26,15 @@ public:
 	double progress; // progress of the grain from 0 to 1
 	bool reverse;
 	bool semitoneMode;
+	bool grainHasReset;
+	double pitchRandom;
 
 private:
 	double startIndex;
 	double readIndex;
 	double readOffset;
+	double randomStartOffset;
 	double playbackSpeed;
+
+	std::ofstream log;
 };

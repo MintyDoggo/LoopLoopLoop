@@ -25,14 +25,16 @@ struct Settings
     int grainCount { 1 };
     bool grainReverse { false };
     bool writePause { false };
-    double spread { 0.0 };
+    double positionRandom { 0.0 };
     bool semitoneMode { true };
+    double pitchRandom { 0.0 };
+
 };
 
 //==============================================================================
 /**
 */
-class LoopLoopLoopAudioProcessor  : public juce::AudioProcessor
+class LoopLoopLoopAudioProcessor  : public juce::AudioProcessor, public juce::AudioProcessorValueTreeState::Listener
 {
 public:
     //==============================================================================
@@ -94,6 +96,8 @@ public:
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     std::ofstream log;
+
+    void parameterChanged(const juce::String& parameterID, float newValue) override;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LoopLoopLoopAudioProcessor)

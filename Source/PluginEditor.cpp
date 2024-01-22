@@ -15,12 +15,12 @@ LoopLoopLoopAudioProcessorEditor::LoopLoopLoopAudioProcessorEditor (LoopLoopLoop
     : AudioProcessorEditor (&p), audioProcessor (p),
     grainPitchSlider(*audioProcessor.treeState.getParameter("grainPitch"), "Semitones"),
     grainSizeSlider(*audioProcessor.treeState.getParameter("grainSize"), "Seconds"),
-    grainSpreadSlider(*audioProcessor.treeState.getParameter("spread"), "idk"),
+    grainPositionRandomSlider(*audioProcessor.treeState.getParameter("positionRandom"), "%"),
     grainCountSlider(*audioProcessor.treeState.getParameter("grainCount"), "Grains"),
 
     grainPitchSliderAttachment(audioProcessor.treeState, "grainPitch", grainPitchSlider),
     grainSizeSliderAttachment(audioProcessor.treeState, "grainSize", grainSizeSlider),
-    grainSpreadSliderAttachment(audioProcessor.treeState, "spread", grainSpreadSlider),
+    grainPositionRandomSliderAttachment(audioProcessor.treeState, "positionRandom", grainPositionRandomSlider),
     grainCountSliderAttachment(audioProcessor.treeState, "grainCount", grainCountSlider)
 {
     
@@ -121,6 +121,12 @@ void LoopLoopLoopAudioProcessorEditor::paintWaveform(juce::Graphics& g)
     const int localHeight = waveformBounds.getHeight();
     const int localWidth = waveformBounds.getWidth();
 
+    auto settings = audioProcessor.getSettings(audioProcessor.treeState);
+
+    const double grainStartPercentage = settings.grainStart;
+    const int grainStart = static_cast<int>(localWidth * grainStartPercentage);
+    const double grainEndPercentage = (settings.grainSize / audioProcessor.historyBuffer[0].getUserSizeInSeconds()) + grainStartPercentage; // grainSize was a percentage but now it's a duration in seonds
+    const int grainEnd = static_cast<int>(localWidth * grainEndPercentage) % localWidth;
 
     //painting the waveform
     const int ampHeight = static_cast<int>(audioProcessor.amplitude * (localHeight / 2)); // add padding here
@@ -155,11 +161,16 @@ void LoopLoopLoopAudioProcessorEditor::paintWaveform(juce::Graphics& g)
 		}
     }
 
-
     for (int i = 0; i < localWidth; i++)
     {
-        g.setColour(juce::Colour::fromFloatRGBA(0.34f, 0.34f, 0.34f, 1.0f));
-        //g.fillRect(i, topPanelHeight - rectArray[i], 1, rectArray[i]);
+        if(i >= grainStart && i <= grainEnd)
+		{
+			g.setColour(juce::Colour::fromFloatRGBA(0.380, 0.654f, 0.910f, 1.0f));
+		}
+		else
+		{
+			g.setColour(juce::Colour::fromFloatRGBA(0.34f, 0.34f, 0.34f, 1.0f));
+		}
 
         int x1 = i;
         int y1 = (localHeight / 2) - rectArray[i];
@@ -217,7 +228,7 @@ void LoopLoopLoopAudioProcessorEditor::paintGrainWindow(juce::Graphics& g)
         //const int playHead = static_cast<int>(grainStart + (width * (grainEndPercentage - grainStartPercentage) * audioProcessor.historyBuffer[0].grains[i].getProgress())) % width;
 
         double readIndex = audioProcessor.historyBuffer[0].grains[i].getReadIndex();
-        wrapReadIndexToBuffer(readIndex, secondsToSamples(settings.historyBufferSize));
+        readIndex = wrapReadIndexToBuffer(readIndex, secondsToSamples(settings.historyBufferSize));
         const int playHead = readIndex / secondsToSamples(settings.historyBufferSize) * double(localWidth);
 
         const int playHeadHeightY2 = (localHeight / 2) + (audioProcessor.historyBuffer[0].grains[i].getGainFactor() * (localHeight / 2)) * .8;
@@ -233,8 +244,8 @@ void LoopLoopLoopAudioProcessorEditor::paintGrainWindow(juce::Graphics& g)
     // blue playhead
     g.setColour(juce::Colour::fromFloatRGBA(0.380, 0.654f, 0.910f, 1.0f));
 
-    // horizontal line
-    g.drawLine(grainStart, localHeight - 1, grainEnd, localHeight - 1, 3); // - 1 so it doesnt overlap with the horizontal separator line
+    //// horizontal line
+    //g.drawLine(grainStart, localHeight - 1, grainEnd, localHeight - 1, 3); // - 1 so it doesnt overlap with the horizontal separator line
     // vertical line
     g.drawLine(grainStart, 0, grainStart, localHeight, 3);
 
@@ -272,7 +283,7 @@ std::vector<juce::Component*> LoopLoopLoopAudioProcessorEditor::getComponents()
     {
         &grainPitchSlider,
         &grainSizeSlider,
-        &grainSpreadSlider,
+        &grainPositionRandomSlider,
         &grainCountSlider
     };
 }
