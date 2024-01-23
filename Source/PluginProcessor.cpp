@@ -9,8 +9,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include "Utilities.h"
-#include <jive_layouts/jive_layouts.h>
-
+#include "ParameterRegistration.h"
 
 double LoopLoopLoopAudioProcessor::sampleRate; // Provide a default value if necessary
 
@@ -29,112 +28,17 @@ LoopLoopLoopAudioProcessor::LoopLoopLoopAudioProcessor()
 #endif
 {
     historyBuffer.resize(2);
-
-    // add parameter listeners
-    treeState.addParameterListener("gain", this);
-    treeState.addParameterListener("grainSize", this);
-    treeState.addParameterListener("grainPitch", this);
-    treeState.addParameterListener("grainStart", this);
-    treeState.addParameterListener("historyBufferSize", this);
-    treeState.addParameterListener("mix", this);
-    treeState.addParameterListener("grainAttack", this);
-    treeState.addParameterListener("grainDecay", this);
-    treeState.addParameterListener("grainCount", this);
-    treeState.addParameterListener("grainReverse", this);
-    treeState.addParameterListener("writePause", this);
-    treeState.addParameterListener("positionRandom", this);
-    treeState.addParameterListener("useSemitones", this);
-    treeState.addParameterListener("pitchRandom", this);
-    treeState.addParameterListener("grainReadOffset", this);
-
+    
+    // add listeners 
+    addParameterListeners(treeState, this);
     log.open("C:\\Users\\dog1\\Desktop\\funny-log-out.txt");
-
 }
 
 LoopLoopLoopAudioProcessor::~LoopLoopLoopAudioProcessor()
 {
-    // remove parameter listeners
-    treeState.removeParameterListener("gain", this);
-    treeState.removeParameterListener("grainSize", this);
-    treeState.removeParameterListener("grainPitch", this);
-    treeState.removeParameterListener("grainStart", this);
-    treeState.removeParameterListener("historyBufferSize", this);
-    treeState.removeParameterListener("mix", this);
-    treeState.removeParameterListener("grainAttack", this);
-    treeState.removeParameterListener("grainDecay", this);
-    treeState.removeParameterListener("grainCount", this);
-    treeState.removeParameterListener("grainReverse", this);
-    treeState.removeParameterListener("writePause", this);
-    treeState.removeParameterListener("positionRandom", this);
-    treeState.removeParameterListener("useSemitones", this);
-    treeState.removeParameterListener("pitchRandom", this);
-    treeState.removeParameterListener("grainReadOffset", this);
-
+    // remove listeners
+    removeParameterListeners(treeState, this);
     log.close();
-}
-
-Settings LoopLoopLoopAudioProcessor::getSettings(juce::AudioProcessorValueTreeState& treeState)
-{
-	Settings settings;
-
-	settings.gain = treeState.getRawParameterValue("gain")->load();
-    settings.grainSize = treeState.getRawParameterValue("grainSize")->load();
-    settings.grainPitch = treeState.getRawParameterValue("grainPitch")->load();
-    settings.grainStart = treeState.getRawParameterValue("grainStart")->load();
-    settings.historyBufferSize = treeState.getRawParameterValue("historyBufferSize")->load();
-    settings.mix = treeState.getRawParameterValue("mix")->load();
-    settings.grainAttack = treeState.getRawParameterValue("grainAttack")->load();
-    settings.grainDecay = treeState.getRawParameterValue("grainDecay")->load();
-    settings.grainCount = treeState.getRawParameterValue("grainCount")->load();
-    settings.grainReverse = treeState.getRawParameterValue("grainReverse")->load();
-    settings.writePause = treeState.getRawParameterValue("writePause")->load();
-    settings.positionRandom = treeState.getRawParameterValue("positionRandom")->load();
-    settings.semitoneMode = treeState.getRawParameterValue("useSemitones")->load();
-    settings.pitchRandom = treeState.getRawParameterValue("pitchRandom")->load();
-    settings.grainReadOffset = treeState.getRawParameterValue("grainReadOffset")->load();
-
-	return settings;
-}
-
-juce::AudioProcessorValueTreeState::ParameterLayout LoopLoopLoopAudioProcessor::createParameterLayout()
-{
-    std::vector<std::unique_ptr<juce::RangedAudioParameter>> parameters;
-
-    // create parameters
-    auto pMix = std::make_unique<juce::AudioParameterFloat>("mix", "Mix", juce::NormalisableRange<float>(0.0, 1.0), 1.0);
-    auto pGrainStart = std::make_unique<juce::AudioParameterFloat>("grainStart", "Grain Start", juce::NormalisableRange<float>(0.0f, 1.0f), 0.0);
-    auto pGrainSize = std::make_unique<juce::AudioParameterFloat>("grainSize", "Grain Size", juce::NormalisableRange<float>(0.0, 15.0), 0.4);
-    auto pGrainPitch = std::make_unique<juce::AudioParameterFloat>("grainPitch", "Grain Pitch", juce::NormalisableRange<float>(-24.0, 24.0), 0.0);
-    auto pGrainAttack = std::make_unique<juce::AudioParameterFloat>("grainAttack", "Grain Attack", juce::NormalisableRange<float>(0.0, 1.0), 0.15);
-    auto pGrainDecay = std::make_unique<juce::AudioParameterFloat>("grainDecay", "Grain Decay", juce::NormalisableRange<float>(0.0, 1.0), 0.85);
-    auto pGrainCount = std::make_unique<juce::AudioParameterInt>("grainCount", "Grain Count", 0, MAX_NUM_GRAINS, 1);
-    auto pPositionRandom = std::make_unique<juce::AudioParameterFloat>("positionRandom", "Position Random", juce::NormalisableRange<float>(0.0, 1.0), 0.0);
-    auto pGrainReverse = std::make_unique<juce::AudioParameterBool>("grainReverse", "Grain Reverse", false);
-    auto pUseSemitones = std::make_unique<juce::AudioParameterBool>("useSemitones", "Use Semitones", true);
-    auto pWritePause = std::make_unique<juce::AudioParameterBool>("writePause", "Write Pause", false);
-    auto pHistoryBufferSize = std::make_unique<juce::AudioParameterFloat>("historyBufferSize", "History Buffer Size", juce::NormalisableRange<float>(0.01, 30.0), 6.0);
-    auto pGain = std::make_unique<juce::AudioParameterFloat>("gain", "Master Gain", juce::NormalisableRange<float>(0.0, 1.0), 1.0);
-    auto pPitchRandom = std::make_unique<juce::AudioParameterFloat>("pitchRandom", "Pitch Random", juce::NormalisableRange<float>(0.0, 1.0), 0.0);
-    auto pGrainReadOffset = std::make_unique<juce::AudioParameterFloat>("grainReadOffset", "Grain Read Offset", juce::NormalisableRange<float>(0.0, 1.0), 0.0);
-
-    // add parameters to vector
-    parameters.push_back(std::move(pMix));
-    parameters.push_back(std::move(pGrainStart));
-    parameters.push_back(std::move(pGrainSize));
-    parameters.push_back(std::move(pGrainPitch));
-    parameters.push_back(std::move(pGrainAttack));
-    parameters.push_back(std::move(pGrainDecay));
-    parameters.push_back(std::move(pPositionRandom));
-    parameters.push_back(std::move(pGrainCount));
-    parameters.push_back(std::move(pGrainReverse));
-    parameters.push_back(std::move(pUseSemitones));
-    parameters.push_back(std::move(pWritePause));
-    parameters.push_back(std::move(pHistoryBufferSize));
-    parameters.push_back(std::move(pGain));
-    parameters.push_back(std::move(pPitchRandom));
-    parameters.push_back(std::move(pGrainReadOffset));
-
-    return { parameters.begin(), parameters.end() };
 }
 
 //void LoopLoopLoopAudioProcessor::setGrainParameters(const juce::String& parameterID, float newValue)

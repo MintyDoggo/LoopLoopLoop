@@ -9,7 +9,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include "Utilities.h"
-#include <jive_layouts/jive_layouts.h>
+#include "ParameterRegistration.h"
 
 //==============================================================================
 LoopLoopLoopAudioProcessorEditor::LoopLoopLoopAudioProcessorEditor (LoopLoopLoopAudioProcessor& p)
@@ -122,7 +122,7 @@ void LoopLoopLoopAudioProcessorEditor::paintWaveform(juce::Graphics& g)
     const int localHeight = waveformBounds.getHeight();
     const int localWidth = waveformBounds.getWidth();
 
-    auto settings = audioProcessor.getSettings(audioProcessor.treeState);
+    auto settings = getSettings(audioProcessor.treeState);
 
     const double grainStartPercentage = settings.grainStart;
     const int grainStart = static_cast<int>(localWidth * grainStartPercentage);
@@ -210,7 +210,7 @@ void LoopLoopLoopAudioProcessorEditor::paintGrainWindow(juce::Graphics& g)
     const int localHeight = waveformBounds.getHeight();
     const int localWidth = waveformBounds.getWidth();
 
-    auto settings = audioProcessor.getSettings(audioProcessor.treeState);
+    auto settings = getSettings(audioProcessor.treeState);
 
     const double grainStartPercentage = settings.grainStart;
     const int grainStart = static_cast<int>(localWidth * grainStartPercentage);

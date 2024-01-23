@@ -4,6 +4,10 @@
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1">
   <MAINGROUP id="AtD8Wy" name="LoopLoopLoop">
     <GROUP id="{0F52AFBF-8EA3-565C-83C9-D9FA7C5B1B9D}" name="Source">
+      <FILE id="tI8F2Z" name="ParameterRegistration.cpp" compile="1" resource="0"
+            file="Source/ParameterRegistration.cpp"/>
+      <FILE id="zl6rS5" name="ParameterRegistration.h" compile="0" resource="0"
+            file="Source/ParameterRegistration.h"/>
       <FILE id="ylHvaJ" name="TextSlider.cpp" compile="1" resource="0" file="Source/TextSlider.cpp"/>
       <FILE id="gMkHvY" name="TextSlider.h" compile="0" resource="0" file="Source/TextSlider.h"/>
       <FILE id="zeUFAK" name="GrainWindow.cpp" compile="1" resource="0" file="Source/GrainWindow.cpp"/>
