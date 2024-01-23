@@ -1,6 +1,6 @@
 #include "GrainWindow.h"
+#include "Utilities.h"
 
-// -------------------------- GrainWindow -----------------------------------------------------
 GrainWindow::GrainWindow()
 {
 	startIndex = 0.0;
@@ -15,7 +15,8 @@ GrainWindow::GrainWindow()
 	semitoneMode = true;
 	randomStartOffset = 0.0;
 	grainHasReset = true;
-	pitchRandom = 0.0;
+	randomPitch = 0.0;
+	randomPitchMax = 0.0;
 
 	log.open("C:\\Users\\dog1\\Desktop\\funny-log-out.txt");
 }
@@ -45,7 +46,10 @@ void GrainWindow::incrementReadIndex()
 	{
 		readIndex = readIndex - secondsToSamples(size);
 		progress = 0.0;
+		randomPitch = getRandomDouble(0.0, randomPitchMax * 12);
+
 		grainHasReset = true;
+
 		return;
 	}
 
@@ -54,6 +58,8 @@ void GrainWindow::incrementReadIndex()
 	{
 		readIndex = readIndex + secondsToSamples(size);
 		progress = 0.0; // progress should maybe be 1.0
+		randomPitch = getRandomDouble(0.0, randomPitchMax * 12);
+
 		grainHasReset = true;
 		return;
 	}
@@ -83,18 +89,18 @@ void GrainWindow::setGrainPitch(double speed)
 	{
 		if (!reverse)
 		{
-			playbackSpeed = semitonesToPlaybackRate(speed + pitchRandom);
+			playbackSpeed = semitonesToPlaybackRate(speed + randomPitch);
 			return;
 		}
 
 		if (reverse)
 		{
-			playbackSpeed = semitonesToPlaybackRate(speed + pitchRandom) * -1;
+			playbackSpeed = semitonesToPlaybackRate(speed + randomPitch) * -1;
 			return;
 		}
 	}
 
-	playbackSpeed = speed + pitchRandom;
+	playbackSpeed = speed + randomPitch;
 }
 
 double GrainWindow::getGainFactor()

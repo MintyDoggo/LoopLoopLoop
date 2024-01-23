@@ -6,7 +6,7 @@
 CircularBuffer::CircularBuffer()
 {
 	writeIndex = 0;
-	grains.resize(128);
+	grains.resize(MAX_NUM_GRAINS);
 	userSize = secondsToSamples(2.0);
 	buffer.resize(secondsToSamples(10.0));
 	writePause = false;

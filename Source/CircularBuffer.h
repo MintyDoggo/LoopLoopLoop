@@ -1,5 +1,4 @@
 #include <JuceHeader.h>
-#include "Utilities.h"
 #include "GrainWindow.h"
 
 class CircularBuffer

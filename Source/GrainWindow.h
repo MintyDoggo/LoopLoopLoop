@@ -1,6 +1,6 @@
 #include <JuceHeader.h>
-#include "Utilities.h"
 #include <fstream>
+
 class GrainWindow
 {
 public:
@@ -27,7 +27,8 @@ public:
 	bool reverse;
 	bool semitoneMode;
 	bool grainHasReset;
-	double pitchRandom;
+	double randomPitchMax;
+	double randomPitch;
 
 private:
 	double startIndex;

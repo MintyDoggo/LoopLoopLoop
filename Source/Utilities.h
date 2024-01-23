@@ -1,4 +1,5 @@
 #pragma once
+#define MAX_NUM_GRAINS 512
 
 double secondsToSamples(double seconds);
 

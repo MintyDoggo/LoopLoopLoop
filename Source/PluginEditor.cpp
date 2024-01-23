@@ -8,6 +8,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "Utilities.h"
 #include <jive_layouts/jive_layouts.h>
 
 //==============================================================================

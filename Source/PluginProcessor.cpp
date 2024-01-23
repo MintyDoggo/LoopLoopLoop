@@ -8,10 +8,9 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "Utilities.cpp"
+#include "Utilities.h"
 #include <jive_layouts/jive_layouts.h>
 
-#define MAX_NUM_GRAINS 512
 
 double LoopLoopLoopAudioProcessor::sampleRate; // Provide a default value if necessary
 
@@ -46,6 +45,7 @@ LoopLoopLoopAudioProcessor::LoopLoopLoopAudioProcessor()
     treeState.addParameterListener("positionRandom", this);
     treeState.addParameterListener("useSemitones", this);
     treeState.addParameterListener("pitchRandom", this);
+    treeState.addParameterListener("grainReadOffset", this);
 
     log.open("C:\\Users\\dog1\\Desktop\\funny-log-out.txt");
 
@@ -68,6 +68,7 @@ LoopLoopLoopAudioProcessor::~LoopLoopLoopAudioProcessor()
     treeState.removeParameterListener("positionRandom", this);
     treeState.removeParameterListener("useSemitones", this);
     treeState.removeParameterListener("pitchRandom", this);
+    treeState.removeParameterListener("grainReadOffset", this);
 
     log.close();
 }
@@ -90,6 +91,7 @@ Settings LoopLoopLoopAudioProcessor::getSettings(juce::AudioProcessorValueTreeSt
     settings.positionRandom = treeState.getRawParameterValue("positionRandom")->load();
     settings.semitoneMode = treeState.getRawParameterValue("useSemitones")->load();
     settings.pitchRandom = treeState.getRawParameterValue("pitchRandom")->load();
+    settings.grainReadOffset = treeState.getRawParameterValue("grainReadOffset")->load();
 
 	return settings;
 }
@@ -113,6 +115,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout LoopLoopLoopAudioProcessor::
     auto pHistoryBufferSize = std::make_unique<juce::AudioParameterFloat>("historyBufferSize", "History Buffer Size", juce::NormalisableRange<float>(0.01, 30.0), 6.0);
     auto pGain = std::make_unique<juce::AudioParameterFloat>("gain", "Master Gain", juce::NormalisableRange<float>(0.0, 1.0), 1.0);
     auto pPitchRandom = std::make_unique<juce::AudioParameterFloat>("pitchRandom", "Pitch Random", juce::NormalisableRange<float>(0.0, 1.0), 0.0);
+    auto pGrainReadOffset = std::make_unique<juce::AudioParameterFloat>("grainReadOffset", "Grain Read Offset", juce::NormalisableRange<float>(0.0, 1.0), 0.0);
 
     // add parameters to vector
     parameters.push_back(std::move(pMix));
@@ -129,8 +132,74 @@ juce::AudioProcessorValueTreeState::ParameterLayout LoopLoopLoopAudioProcessor::
     parameters.push_back(std::move(pHistoryBufferSize));
     parameters.push_back(std::move(pGain));
     parameters.push_back(std::move(pPitchRandom));
+    parameters.push_back(std::move(pGrainReadOffset));
 
     return { parameters.begin(), parameters.end() };
+}
+
+//void LoopLoopLoopAudioProcessor::setGrainParameters(const juce::String& parameterID, float newValue)
+//{
+//}
+
+void LoopLoopLoopAudioProcessor::updateGrainParameters()
+{
+    auto settings = getSettings(treeState);
+    //historyBuffer[channel].grains[grain].setReadOffset(double(grain));
+
+    for (int grain = 0; grain < historyBuffer[0].userNumGrains; grain++)
+    {
+        historyBuffer[0].grains[grain].size = settings.grainSize;
+        historyBuffer[1].grains[grain].size = settings.grainSize;
+
+        if (settings.semitoneMode)
+        {
+            historyBuffer[0].grains[grain].setGrainPitch(settings.grainPitch);
+            historyBuffer[1].grains[grain].setGrainPitch(settings.grainPitch);
+        }
+        else
+        {
+            historyBuffer[0].grains[grain].setGrainPitch(remapValue(settings.grainPitch, -24, 24, -8, 8));
+            historyBuffer[1].grains[grain].setGrainPitch(remapValue(settings.grainPitch, -24, 24, -8, 8));
+        }
+
+        historyBuffer[0].grains[grain].setStartIndex(settings.historyBufferSize * settings.grainStart);
+        historyBuffer[1].grains[grain].setStartIndex(settings.historyBufferSize * settings.grainStart);
+
+        historyBuffer[0].grains[grain].attack = settings.grainAttack;
+        historyBuffer[1].grains[grain].attack = settings.grainAttack;
+
+        historyBuffer[0].grains[grain].decay = settings.grainDecay;
+        historyBuffer[1].grains[grain].decay = settings.grainDecay;
+
+        historyBuffer[0].grains[grain].reverse = settings.grainReverse;
+        historyBuffer[1].grains[grain].reverse = settings.grainReverse;
+
+        historyBuffer[0].grains[grain].semitoneMode = settings.semitoneMode;
+        historyBuffer[1].grains[grain].semitoneMode = settings.semitoneMode;
+
+        historyBuffer[0].grains[grain].randomPitchMax = settings.pitchRandom;
+        historyBuffer[1].grains[grain].randomPitchMax = settings.pitchRandom;
+
+        // if grain has reset, queue next random start offset and pitch random.
+        if (historyBuffer[0].grains[grain].grainHasReset)
+        {
+            const double randomStartOffset = getRandomDouble(0.0, settings.positionRandom * settings.historyBufferSize);
+            const double randomPitch = getRandomDouble(0.0, settings.pitchRandom);
+
+            // todo: this needs to be queued up and done in the next loop, because its very unlikely that this change happens as we turn a knob(progress is being reset)
+            historyBuffer[0].grains[grain].setRandomStartOffset(randomStartOffset); // todo: might be unsafe (out of bounds)
+            historyBuffer[1].grains[grain].setRandomStartOffset(randomStartOffset); // todo: might be unsafe (out of bounds)
+
+            // same for this
+            historyBuffer[0].grains[grain].setStartIndex(settings.historyBufferSize * settings.grainStart);
+            historyBuffer[1].grains[grain].setStartIndex(settings.historyBufferSize * settings.grainStart);
+
+
+        }
+
+        historyBuffer[0].grains[grain].setReadOffset(grain * settings.grainReadOffset * settings.grainSize);
+        historyBuffer[1].grains[grain].setReadOffset(grain * settings.grainReadOffset * settings.grainSize);
+    }
 }
 
 void LoopLoopLoopAudioProcessor::parameterChanged(const juce::String& parameterID, float newValue) // is using float here ok? todo
@@ -149,22 +218,25 @@ void LoopLoopLoopAudioProcessor::parameterChanged(const juce::String& parameterI
 
     if (parameterID == "grainSize")
 	{
-		settings.grainSize = newValue;
+        updateGrainParameters();
 	}
     
     if (parameterID == "grainPitch")
     {
-        settings.grainPitch = newValue;
+        updateGrainParameters();
     }
 
     if (parameterID == "grainStart")
     {
-		settings.grainStart = newValue;
-	}
+        updateGrainParameters();
+    }
 
     if (parameterID == "historyBufferSize")
 	{
-        settings.historyBufferSize = newValue;
+        historyBuffer[0].setUserSize(settings.historyBufferSize);
+        historyBuffer[1].setUserSize(settings.historyBufferSize);
+
+        //settings.historyBufferSize = newValue;
 	}
 
 	if (parameterID == "mix")
@@ -174,43 +246,50 @@ void LoopLoopLoopAudioProcessor::parameterChanged(const juce::String& parameterI
 
 	if (parameterID == "grainAttack")
 	{
-		settings.grainAttack = newValue;
-	}
+        updateGrainParameters();
+    }
 
 	if (parameterID == "grainDecay")
 	{
-		settings.grainDecay = newValue;
-	}
+        updateGrainParameters();
+    }
 
     if (parameterID == "grainCount")
     {
-		settings.grainCount = newValue;
+        historyBuffer[0].userNumGrains = settings.grainCount;
+        historyBuffer[1].userNumGrains = settings.grainCount;
+
+        updateGrainParameters();
+
+		//settings.grainCount = newValue;
 	}
 
     if (parameterID == "grainReverse")
     {
-		settings.grainReverse = newValue;
-	}
+        updateGrainParameters();
+    }
 
     if (parameterID == "writePause")
     {
-		settings.writePause = newValue;
+        historyBuffer[0].writePause = settings.writePause;
+		historyBuffer[1].writePause = settings.writePause;
+		//settings.writePause = newValue;
 	}
 
 	if (parameterID == "positionRandom")
 	{
-		settings.positionRandom = newValue;
-	}
+        updateGrainParameters();
+    }
 
 	if (parameterID == "useSemitones")
 	{
-		settings.semitoneMode = newValue;
-	}
+        updateGrainParameters();
+    }
 
 	if (parameterID == "pitchRandom")
 	{
-		settings.pitchRandom = newValue;
-	}
+        updateGrainParameters();
+    }
 
 }
 
@@ -284,8 +363,6 @@ void LoopLoopLoopAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     LoopLoopLoopAudioProcessor::sampleRate = sampleRate;
     std::srand(std::time(nullptr)); // seed random number generator)
      
-    MAX_NUM_GRAINS;
-
     // resize history buffer
     for(int channel = 0; channel < historyBuffer.size(); channel++)
 	{
@@ -357,32 +434,6 @@ void LoopLoopLoopAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // do the actual processing
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
-        // set history buffer params
-        historyBuffer[channel].setUserSize(settings.historyBufferSize);
-        historyBuffer[channel].writePause = settings.writePause;
-        historyBuffer[channel].userNumGrains = settings.grainCount;
-
-        // set grain parameters
-        for (int grain = 0; grain < historyBuffer[channel].userNumGrains; grain++)
-        {
-            if (settings.semitoneMode)
-            {
-                historyBuffer[channel].grains[grain].setGrainPitch(settings.grainPitch);
-            }
-			else
-			{
-				historyBuffer[channel].grains[grain].setGrainPitch(remapValue(settings.grainPitch, -24, 24, -8, 8));
-			}
-
-            historyBuffer[channel].grains[grain].size = settings.grainSize;
-            historyBuffer[channel].grains[grain].setStartIndex(settings.historyBufferSize * settings.grainStart);
-            historyBuffer[channel].grains[grain].attack = settings.grainAttack;
-            historyBuffer[channel].grains[grain].decay = settings.grainDecay;
-            historyBuffer[channel].grains[grain].reverse = settings.grainReverse; 
-            historyBuffer[channel].grains[grain].setReadOffset(double(grain));
-            historyBuffer[channel].grains[grain].semitoneMode = settings.semitoneMode;
-        }
-
         auto* channelData = buffer.getWritePointer (channel);
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
@@ -401,13 +452,13 @@ void LoopLoopLoopAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             const double grainGainFactor = historyBuffer[channel].grains[grain].getGainFactor() * grainGainNormalizer;
             for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
             {
-                // if grain has reset, set random start offset and pitch random. TODO: MOVE THIS TO LISTENER
-                if (historyBuffer[channel].grains[grain].grainHasReset)
-                {
-                    historyBuffer[channel].grains[grain].setRandomStartOffset(getRandomDouble(0.0, settings.positionRandom * settings.historyBufferSize)); // todo: might be unsafe (out of bounds)
-                    historyBuffer[channel].grains[grain].setStartIndex(settings.historyBufferSize * settings.grainStart);
-                    historyBuffer[channel].grains[grain].pitchRandom = getRandomDouble(0.0, settings.pitchRandom);
-                }
+                //// if grain has reset, set random start offset and pitch random. TODO: MOVE THIS TO LISTENER
+                //if (historyBuffer[channel].grains[grain].grainHasReset)
+                //{
+                //    historyBuffer[channel].grains[grain].setRandomStartOffset(getRandomDouble(0.0, settings.positionRandom * settings.historyBufferSize)); // todo: might be unsafe (out of bounds)
+                //    historyBuffer[channel].grains[grain].setStartIndex(settings.historyBufferSize * settings.grainStart);
+                //    historyBuffer[channel].grains[grain].pitchRandom = getRandomDouble(0.0, settings.pitchRandom);
+                //}
 
 
                 //log << "settings.grainCount: " << settings.grainCount << std::endl;

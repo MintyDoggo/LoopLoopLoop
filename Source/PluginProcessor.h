@@ -28,6 +28,7 @@ struct Settings
     double positionRandom { 0.0 };
     bool semitoneMode { true };
     double pitchRandom { 0.0 };
+    double grainReadOffset { 0.0 };
 
 };
 
@@ -76,6 +77,8 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     Settings getSettings(juce::AudioProcessorValueTreeState& treeState);
+    void setGrainParameters(const juce::String& parameterID, float newValue);
+    void updateGrainParameters();
 
     static double sampleRate;
     
@@ -92,6 +95,8 @@ public:
     int sampleCounter = 0; // how many samples we've seen so far
     int detectionLength = 0; // how many samples to sum for RMS. this does not determine the animation speed.
     std::vector<CircularBuffer> historyBuffer;
+
+    juce::Random random;
 
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
