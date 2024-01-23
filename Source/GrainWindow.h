@@ -8,7 +8,7 @@ public:
 
 	void setReadIndex(double index);
 	double getReadIndex();
-	void incrementReadIndex();
+	void incrementReadIndex(double historyBufferUserSize);
 
 	void setReadOffset(double offset);
 	void setRandomStartOffset(double offset);
@@ -27,8 +27,12 @@ public:
 	bool reverse;
 	bool semitoneMode;
 	bool grainHasReset;
-	double randomPitchMax;
 	double randomPitch;
+	double randomPitchMax;
+	double randomStartOffsetMax;
+
+	juce::Random pitchRandomizer;
+	juce::Random startOffsetRandomizer;
 
 private:
 	double startIndex;

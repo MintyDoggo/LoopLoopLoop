@@ -1,5 +1,6 @@
 #include "GrainWindow.h"
 #include "Utilities.h"
+#include "ParameterRegistration.h"
 
 GrainWindow::GrainWindow()
 {
@@ -18,7 +19,7 @@ GrainWindow::GrainWindow()
 	randomPitch = 0.0;
 	randomPitchMax = 0.0;
 
-	log.open("C:\\Users\\dog1\\Desktop\\funny-log-out.txt");
+	//log.open("C:\\Users\\dog1\\Desktop\\funny-log-out.txt");
 }
 
 
@@ -30,23 +31,24 @@ void GrainWindow::setReadIndex(double index)
 // warning: this function will return a value outside of the bounds of the user size
 double GrainWindow::getReadIndex()
 {
-	const double realIndex = readIndex + readOffset + randomStartOffset;
+	const double realIndex = readIndex + randomStartOffset + readOffset;
 	return realIndex;
 }
 
-void GrainWindow::incrementReadIndex()
+void GrainWindow::incrementReadIndex(double historyBufferUserSize)
 {
-	readIndex += playbackSpeed;
+	readIndex += playbackSpeed + randomPitch;
 
 	const double normalizedOffsetReadIndex = (readIndex - startIndex + readOffset); // for example, if read index is 1300 and start index is 1000, normalizedOffsetReadIndex is 300
 	progress = normalizedOffsetReadIndex / secondsToSamples(size); 
 
 	// for positive playback speeds, if it has reset
-	if (readIndex - startIndex + readOffset >= secondsToSamples(size))
+	if (normalizedOffsetReadIndex >= secondsToSamples(size))
 	{
 		readIndex = readIndex - secondsToSamples(size);
 		progress = 0.0;
-		randomPitch = getRandomDouble(0.0, randomPitchMax * 12);
+		randomPitch = pitchRandomizer.nextDouble() * randomPitchMax;
+		randomStartOffset = secondsToSamples(startOffsetRandomizer.nextDouble() * randomStartOffsetMax * historyBufferUserSize);
 
 		grainHasReset = true;
 
@@ -58,7 +60,8 @@ void GrainWindow::incrementReadIndex()
 	{
 		readIndex = readIndex + secondsToSamples(size);
 		progress = 0.0; // progress should maybe be 1.0
-		randomPitch = getRandomDouble(0.0, randomPitchMax * 12);
+		randomPitch = pitchRandomizer.nextDouble() * randomPitchMax;
+		randomStartOffset = secondsToSamples(startOffsetRandomizer.nextDouble() * randomStartOffsetMax * historyBufferUserSize);
 
 		grainHasReset = true;
 		return;
@@ -89,18 +92,18 @@ void GrainWindow::setGrainPitch(double speed)
 	{
 		if (!reverse)
 		{
-			playbackSpeed = semitonesToPlaybackRate(speed + randomPitch);
+			playbackSpeed = semitonesToPlaybackRate(speed);
 			return;
 		}
 
 		if (reverse)
 		{
-			playbackSpeed = semitonesToPlaybackRate(speed + randomPitch) * -1;
+			playbackSpeed = semitonesToPlaybackRate(speed) * -1;
 			return;
 		}
 	}
 
-	playbackSpeed = speed + randomPitch;
+	playbackSpeed = speed;
 }
 
 double GrainWindow::getGainFactor()

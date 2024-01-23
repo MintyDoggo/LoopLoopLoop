@@ -73,7 +73,6 @@ public:
     int detectionLength = 0; // how many samples to sum for RMS. this does not determine the animation speed.
     std::vector<CircularBuffer> historyBuffer;
 
-    juce::Random random;
 
 private:
     std::ofstream log;

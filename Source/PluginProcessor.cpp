@@ -84,24 +84,10 @@ void LoopLoopLoopAudioProcessor::updateGrainParameters()
         historyBuffer[0].grains[grain].randomPitchMax = settings.pitchRandom;
         historyBuffer[1].grains[grain].randomPitchMax = settings.pitchRandom;
 
-        // if grain has reset, queue next random start offset and pitch random.
-        if (historyBuffer[0].grains[grain].grainHasReset)
-        {
-            const double randomStartOffset = getRandomDouble(0.0, settings.positionRandom * settings.historyBufferSize);
-            const double randomPitch = getRandomDouble(0.0, settings.pitchRandom);
+        historyBuffer[0].grains[grain].randomStartOffsetMax = settings.positionRandom;
+        historyBuffer[1].grains[grain].randomStartOffsetMax = settings.positionRandom;
 
-            // todo: this needs to be queued up and done in the next loop, because its very unlikely that this change happens as we turn a knob(progress is being reset)
-            historyBuffer[0].grains[grain].setRandomStartOffset(randomStartOffset); // todo: might be unsafe (out of bounds)
-            historyBuffer[1].grains[grain].setRandomStartOffset(randomStartOffset); // todo: might be unsafe (out of bounds)
-
-            // same for this
-            historyBuffer[0].grains[grain].setStartIndex(settings.historyBufferSize * settings.grainStart);
-            historyBuffer[1].grains[grain].setStartIndex(settings.historyBufferSize * settings.grainStart);
-
-
-        }
-
-        historyBuffer[0].grains[grain].setReadOffset(grain * settings.grainReadOffset * settings.grainSize);
+        historyBuffer[0].grains[grain].setReadOffset(grain * settings.grainReadOffset * settings.grainSize); // todo: broken
         historyBuffer[1].grains[grain].setReadOffset(grain * settings.grainReadOffset * settings.grainSize);
     }
 }
@@ -266,7 +252,18 @@ void LoopLoopLoopAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     // store changed sample rate
     LoopLoopLoopAudioProcessor::sampleRate = sampleRate;
     std::srand(std::time(nullptr)); // seed random number generator)
-     
+
+    // set seed of each grain random number generator
+	for (int grain = 0; grain < MAX_NUM_GRAINS; grain++)
+	{
+        juce::int64 seed = std::rand();
+		historyBuffer[0].grains[grain].pitchRandomizer.setSeed(seed);
+        historyBuffer[1].grains[grain].pitchRandomizer.setSeed(seed);
+        seed = std::rand();
+        historyBuffer[0].grains[grain].startOffsetRandomizer.setSeed(seed);
+        historyBuffer[1].grains[grain].startOffsetRandomizer.setSeed(seed);
+	}
+
     // resize history buffer
     for(int channel = 0; channel < historyBuffer.size(); channel++)
 	{
@@ -380,7 +377,7 @@ void LoopLoopLoopAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                 channelData[sample] += grainSample * settings.gain; // todo: settings.gain funny man not good man
 
                 // increment read index for grain
-                historyBuffer[channel].grains[grain].incrementReadIndex();
+                historyBuffer[channel].grains[grain].incrementReadIndex(settings.historyBufferSize);
             }
         }
 

@@ -26,7 +26,7 @@ LoopLoopLoopAudioProcessorEditor::LoopLoopLoopAudioProcessorEditor (LoopLoopLoop
 {
     
     startTimerHz(240);
-    log.open("C:\\Users\\dog1\\Desktop\\funny-log-out.txt");
+    //log.open("C:\\Users\\dog1\\Desktop\\funny-log-out.txt");
 
     for (auto* component : getComponents())
 	{
@@ -46,7 +46,7 @@ LoopLoopLoopAudioProcessorEditor::LoopLoopLoopAudioProcessorEditor (LoopLoopLoop
 
 LoopLoopLoopAudioProcessorEditor::~LoopLoopLoopAudioProcessorEditor()
 {
-    log.close();
+    //log.close();
 }
 
 void LoopLoopLoopAudioProcessorEditor::update()

@@ -35,6 +35,11 @@ double semitonesToPlaybackRate(double semitones)
 	return std::pow(2.0, semitones / 12.0);
 }
 
+double playbackRateToSemitones(double playbackRate) // any ret val mod 12 is a C note
+{
+	return 12.0 * std::log2(playbackRate);
+}
+
 double wrapReadIndexToBuffer(double readIndex, double bufferSize)
 {
 	if (readIndex < 0.0)
@@ -46,16 +51,9 @@ double wrapReadIndexToBuffer(double readIndex, double bufferSize)
 	return readIndex = std::abs(std::fmod(readIndex, bufferSize));
 }
 
-double getRandomDouble(double min, double max) 
+double getRandomDouble(double min, double max)
 {
+	srand(time(nullptr));
 	double ran = (double)rand() / RAND_MAX;
 	return min + ran * (max - min);
-}
-
-double clampToClosestSemitone(double pitch)
-{
-	const double semitone = 1.0 / 12.0;
-	const double semitoneOffset = std::fmod(pitch, semitone);
-	const double semitoneClamped = pitch - semitoneOffset;
-	return semitoneClamped;
 }
