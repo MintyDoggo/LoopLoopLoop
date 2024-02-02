@@ -12,17 +12,31 @@
 #include "ParameterRegistration.h"
 
 //==============================================================================
-LoopLoopLoopAudioProcessorEditor::LoopLoopLoopAudioProcessorEditor (LoopLoopLoopAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p),
-    grainPitchSlider(*audioProcessor.treeState.getParameter("grainPitch"), "Semitones"),
-    grainSizeSlider(*audioProcessor.treeState.getParameter("grainSize"), "Seconds"),
+LoopLoopLoopAudioProcessorEditor::LoopLoopLoopAudioProcessorEditor(LoopLoopLoopAudioProcessor& p)
+    : AudioProcessorEditor(&p), audioProcessor(p),
+    grainPitchSlider(*audioProcessor.treeState.getParameter("grainPitch"), "st"),
+    grainSizeSlider(*audioProcessor.treeState.getParameter("grainSize"), "Sec"),
     grainPositionRandomSlider(*audioProcessor.treeState.getParameter("positionRandom"), "%"),
-    grainCountSlider(*audioProcessor.treeState.getParameter("grainCount"), "Grains"),
+    grainCountSlider(*audioProcessor.treeState.getParameter("grainCount"), ""),
+    grainStartSlider(*audioProcessor.treeState.getParameter("grainStart"), "%"),
+    historyBufferSizeSlider(*audioProcessor.treeState.getParameter("historyBufferSize"), "Sec"),
+    pitchRandomSlider(*audioProcessor.treeState.getParameter("pitchRandom"), "%"),
+    grainReadOffsetSlider(*audioProcessor.treeState.getParameter("grainReadOffset"), "%"),
+    grainAttackSlider(*audioProcessor.treeState.getParameter("grainAttack"), "%"),
+    grainDecaySlider(*audioProcessor.treeState.getParameter("grainDecay"), "%"),
+    mixSlider(*audioProcessor.treeState.getParameter("mix"), "%"),
 
     grainPitchSliderAttachment(audioProcessor.treeState, "grainPitch", grainPitchSlider),
     grainSizeSliderAttachment(audioProcessor.treeState, "grainSize", grainSizeSlider),
     grainPositionRandomSliderAttachment(audioProcessor.treeState, "positionRandom", grainPositionRandomSlider),
-    grainCountSliderAttachment(audioProcessor.treeState, "grainCount", grainCountSlider)
+    grainCountSliderAttachment(audioProcessor.treeState, "grainCount", grainCountSlider),
+    grainStartSliderAttachment(audioProcessor.treeState, "grainStart", grainStartSlider),
+    historyBufferSizeSliderAttachment(audioProcessor.treeState, "historyBufferSize", historyBufferSizeSlider),
+    pitchRandomSliderAttachment(audioProcessor.treeState, "pitchRandom", pitchRandomSlider),
+    grainReadOffsetSliderAttachment(audioProcessor.treeState, "grainReadOffset", grainReadOffsetSlider),
+    grainAttackSliderAttachment(audioProcessor.treeState, "grainAttack", grainAttackSlider),
+    grainDecaySliderAttachment(audioProcessor.treeState, "grainDecay", grainDecaySlider),
+    mixSliderAttachment(audioProcessor.treeState, "mix", mixSlider)
 {
     
     startTimerHz(240);
@@ -41,6 +55,20 @@ LoopLoopLoopAudioProcessorEditor::LoopLoopLoopAudioProcessorEditor (LoopLoopLoop
     openGLContext.attachTo(*getTopLevelComponent());
 
     startTime = juce::Time::getMillisecondCounterHiRes();
+
+    //make components visible
+    addAndMakeVisible(grainStartSlider);
+    addAndMakeVisible(grainPitchSlider);
+    addAndMakeVisible(grainSizeSlider);
+    addAndMakeVisible(grainPositionRandomSlider);
+    addAndMakeVisible(grainCountSlider);
+    addAndMakeVisible(historyBufferSizeSlider);
+    addAndMakeVisible(pitchRandomSlider);
+    addAndMakeVisible(grainReadOffsetSlider);
+    addAndMakeVisible(grainAttackSlider);
+    addAndMakeVisible(grainDecaySlider);
+    addAndMakeVisible(grainReadOffsetSlider);
+    addAndMakeVisible(mixSlider);
 
 }
 
@@ -77,6 +105,8 @@ void LoopLoopLoopAudioProcessorEditor::paint (juce::Graphics& g)
     g.fillAll(juce::Colour::fromFloatRGBA(0.15f, 0.15f, 0.16f, 1.0f));
 
 
+
+
     paintWaveform(g);
     paintGrainWindow(g);
     //paintVerticalLine(g);
@@ -95,23 +125,41 @@ void LoopLoopLoopAudioProcessorEditor::resized()
     // subcomponents in your editor..
 
     auto bounds = getBounds();
-    // Calculate the width for each component based on the total number of components
-    int numComponents = getComponents().size();
-    int componentWidth = bounds.getWidth() / numComponents;
-
     auto bottomPanelBounds = bounds.removeFromBottom(bounds.getHeight() * 0.25);
-    //auto waveformBounds = bounds.removeFromTop(bounds.getHeight() * 0.66);
-    //auto randomParameterBounds = bounds.removeFromBottom(bounds.getHeight() * 1);
 
-    int i = 0;
-    // Calculate the new bounds for each component based on the scale factor
-    for (auto* component : getComponents())
-    {
-        int x = componentWidth * i;
-        int y = bottomPanelBounds.getY(); // TODO: this is a hacky way to fit vertically
-        component->setBounds(x, y, componentWidth, bottomPanelBounds.getHeight());
-        ++i;
-    }
+
+    // position start slider
+    grainStartSlider.setBounds(bounds);
+
+    grainPitchSlider.setName("Pitch");
+    grainSizeSlider.setName("Size");
+    grainPositionRandomSlider.setName("Pos Ran");
+    grainCountSlider.setName("Grains");
+    historyBufferSizeSlider.setName("Buffer Size");
+    pitchRandomSlider.setName("Pitch Ran");
+    grainReadOffsetSlider.setName("Offset");
+    grainAttackSlider.setName("Attack");
+    grainDecaySlider.setName("Decay");
+    mixSlider.setName("Mix");
+
+    // Calculate the width for each component based on the total number of components
+    const float numBottomComponents = 10.0;
+    
+    const float spacing = bounds.getWidth() / numBottomComponents;
+
+    const float offset = spacing / 4.0f;
+
+    // position bottom panel sliders
+    grainCountSlider.setBounds(spacing * 0 + offset, bottomPanelBounds.getY(), grainCountSlider.getSliderMinWidth(), bottomPanelBounds.getHeight());
+    grainSizeSlider.setBounds(spacing * 1 + offset, bottomPanelBounds.getY(), grainSizeSlider.getSliderMinWidth(), bottomPanelBounds.getHeight());
+    grainPositionRandomSlider.setBounds(spacing * 2 + offset, bottomPanelBounds.getY(), grainPositionRandomSlider.getSliderMinWidth(), bottomPanelBounds.getHeight());
+    grainPitchSlider.setBounds(spacing * 3 + offset, bottomPanelBounds.getY(), grainPitchSlider.getSliderMinWidth(), bottomPanelBounds.getHeight());
+    pitchRandomSlider.setBounds(spacing * 4 + offset, bottomPanelBounds.getY(), pitchRandomSlider.getSliderMinWidth(), bottomPanelBounds.getHeight());
+    grainAttackSlider.setBounds(spacing * 5 + offset, bottomPanelBounds.getY(), grainAttackSlider.getSliderMinWidth(), bottomPanelBounds.getHeight());
+    grainDecaySlider.setBounds(spacing * 6 + offset, bottomPanelBounds.getY(), grainDecaySlider.getSliderMinWidth(), bottomPanelBounds.getHeight());
+    grainReadOffsetSlider.setBounds(spacing * 7 + offset, bottomPanelBounds.getY(), grainReadOffsetSlider.getSliderMinWidth(), bottomPanelBounds.getHeight());
+    mixSlider.setBounds(spacing * 8 + offset, bottomPanelBounds.getY(), mixSlider.getSliderMinWidth(), bottomPanelBounds.getHeight());
+    historyBufferSizeSlider.setBounds(spacing * 9 + offset, bottomPanelBounds.getY(), historyBufferSizeSlider.getSliderMinWidth(), bottomPanelBounds.getHeight());
 
 }
 
@@ -242,20 +290,20 @@ void LoopLoopLoopAudioProcessorEditor::paintGrainWindow(juce::Graphics& g)
         g.drawLine(playHead, playHeadHeightY1, playHead, playHeadHeightY2, 3);
 	}
 
-    // blue playhead
-    g.setColour(juce::Colour::fromFloatRGBA(0.380, 0.654f, 0.910f, 1.0f));
+ //   // blue playhead
+ //   g.setColour(juce::Colour::fromFloatRGBA(0.380, 0.654f, 0.910f, 1.0f));
 
-    //// horizontal line
-    //g.drawLine(grainStart, localHeight - 1, grainEnd, localHeight - 1, 3); // - 1 so it doesnt overlap with the horizontal separator line
-    // vertical line
-    g.drawLine(grainStart, 0, grainStart, localHeight, 3);
+ //   //// horizontal line
+ //   //g.drawLine(grainStart, localHeight - 1, grainEnd, localHeight - 1, 3); // - 1 so it doesnt overlap with the horizontal separator line
+ //   // vertical line
+ //   g.drawLine(grainStart, 0, grainStart, localHeight, 3);
 
-    // playhead triangles
-    juce::Path triangle;
-    triangle.addTriangle(grainStart - 9, 0, grainStart - 3, 0, grainStart - 3, 10);
-	g.fillPath(triangle);
-    triangle.addTriangle(grainStart + 9, 0, grainStart + 3, 0, grainStart + 3, 10);
-    g.fillPath(triangle);
+ //   // playhead triangles
+ //   juce::Path triangle;
+ //   triangle.addTriangle(grainStart - 9, 0, grainStart - 3, 0, grainStart - 3, 10);
+	//g.fillPath(triangle);
+ //   triangle.addTriangle(grainStart + 9, 0, grainStart + 3, 0, grainStart + 3, 10);
+ //   g.fillPath(triangle);
 
     // paint the write index
     g.setColour(juce::Colours::white);

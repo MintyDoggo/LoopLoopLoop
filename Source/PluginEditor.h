@@ -1,17 +1,10 @@
-/*
-  ==============================================================================
-
-    This file contains the basic framework code for a JUCE plugin editor.
-
-  ==============================================================================
-*/
-
 #pragma once
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include <fstream>
 #include "TextSlider.h"
+#include "PlayheadSlider.h"
 
 //==============================================================================
 /**
@@ -59,6 +52,42 @@ private:
     double previousTime = 0;
     double elapsedTime = 0;
 
+    TextSlider
+        grainPitchSlider,
+        grainSizeSlider,
+        grainPositionRandomSlider,
+        grainCountSlider,
+        historyBufferSizeSlider,
+        mixSlider,
+        grainAttackSlider,
+        grainDecaySlider,
+        grainReadOffsetSlider,
+        pitchRandomSlider;
+
+
+    PlayheadSlider grainStartSlider;
+
+
+    using APVTS = juce::AudioProcessorValueTreeState;
+    using Attachment = APVTS::SliderAttachment;
+
+    Attachment
+		grainPitchSliderAttachment,
+		grainSizeSliderAttachment,
+		grainPositionRandomSliderAttachment,
+        grainCountSliderAttachment,
+        grainStartSliderAttachment,
+        historyBufferSizeSliderAttachment,
+        mixSliderAttachment,
+        grainAttackSliderAttachment,
+        grainDecaySliderAttachment,
+        grainReadOffsetSliderAttachment,
+        pitchRandomSliderAttachment;
+
+
+    std::vector<juce::Component*> getComponents();
+
+    // Slider definitions and attachments
     juce::Array<juce::Colour> playheadColors
     {
         juce::Colour::fromFloatRGBA(0.70f, 0.45f, 0.95f, 1.0f),
@@ -98,23 +127,6 @@ private:
         juce::Colour::fromFloatRGBA(0.36f, 0.11f, 0.61f, 1.0f),
     };
 
-    // Slider definitions and attachments
-    TextSlider
-        grainPitchSlider,
-        grainSizeSlider,
-        grainPositionRandomSlider,
-        grainCountSlider;
-
-    using APVTS = juce::AudioProcessorValueTreeState;
-    using Attachment = APVTS::SliderAttachment;
-
-    Attachment
-		grainPitchSliderAttachment,
-		grainSizeSliderAttachment,
-		grainPositionRandomSliderAttachment,
-        grainCountSliderAttachment;
-
-    std::vector<juce::Component*> getComponents();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LoopLoopLoopAudioProcessorEditor)
 };

@@ -18,14 +18,15 @@ GrainWindow::GrainWindow()
 	grainHasReset = true;
 	randomPitch = 0.0;
 	randomPitchMax = 0.0;
+	randomStartOffsetMax = 0.0;
 
 	//log.open("C:\\Users\\dog1\\Desktop\\funny-log-out.txt");
 }
 
-
 void GrainWindow::setReadIndex(double index)
 {
 	readIndex = secondsToSamples(index);
+	progress = index / size;
 }
 
 // warning: this function will return a value outside of the bounds of the user size
@@ -47,11 +48,11 @@ void GrainWindow::incrementReadIndex(double historyBufferUserSize)
 	{
 		readIndex = readIndex - secondsToSamples(size);
 		progress = 0.0;
-		randomPitch = pitchRandomizer.nextDouble() * randomPitchMax;
 		randomStartOffset = secondsToSamples(startOffsetRandomizer.nextDouble() * randomStartOffsetMax * historyBufferUserSize);
 
-		grainHasReset = true;
+		randomPitch = pitchRandomizer.nextDouble() * (randomPitchMax * 12.0);
 
+		grainHasReset = true;
 		return;
 	}
 
@@ -60,8 +61,9 @@ void GrainWindow::incrementReadIndex(double historyBufferUserSize)
 	{
 		readIndex = readIndex + secondsToSamples(size);
 		progress = 0.0; // progress should maybe be 1.0
-		randomPitch = pitchRandomizer.nextDouble() * randomPitchMax;
 		randomStartOffset = secondsToSamples(startOffsetRandomizer.nextDouble() * randomStartOffsetMax * historyBufferUserSize);
+
+		randomPitch = pitchRandomizer.nextDouble() * (randomPitchMax * 12.0);
 
 		grainHasReset = true;
 		return;

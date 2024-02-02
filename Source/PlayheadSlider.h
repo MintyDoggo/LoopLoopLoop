@@ -3,32 +3,23 @@
 #include <JuceHeader.h>
 #include "LookAndFeel.h"
 
-struct TextSlider : juce::Slider
+struct PlayheadSlider : juce::Slider
 {
-    TextSlider(juce::RangedAudioParameter& rap, const juce::String& unitSuffix) :
+    PlayheadSlider(juce::RangedAudioParameter& rap, const juce::String& unitSuffix) :
         juce::Slider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox),
         parameter(&rap),
         suffix(unitSuffix)
     {
         setLookAndFeel(&lnf);
+        setSliderStyle(LinearHorizontal);
     }
 
-    ~TextSlider()
+    ~PlayheadSlider()
     {
         setLookAndFeel(nullptr);
     }
 
     void paint(juce::Graphics& g) override;
-
-    juce::Rectangle<int> getSliderBounds() const;
-
-    juce::String getDisplayString() const;
-
-    double getNormalisedValue();
-
-    float getSliderMinWidth();
-
-    // add listener to slider here maybe
 
 private:
     LookAndFeel lnf;

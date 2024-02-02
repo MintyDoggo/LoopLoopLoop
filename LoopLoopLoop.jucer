@@ -4,6 +4,12 @@
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1">
   <MAINGROUP id="AtD8Wy" name="LoopLoopLoop">
     <GROUP id="{0F52AFBF-8EA3-565C-83C9-D9FA7C5B1B9D}" name="Source">
+      <FILE id="uH8mGB" name="LookAndFeel.cpp" compile="1" resource="0" file="Source/LookAndFeel.cpp"/>
+      <FILE id="LrG6XD" name="LookAndFeel.h" compile="0" resource="0" file="Source/LookAndFeel.h"/>
+      <FILE id="cdseif" name="PlayheadSlider.cpp" compile="1" resource="0"
+            file="Source/PlayheadSlider.cpp"/>
+      <FILE id="jcJCzP" name="PlayheadSlider.h" compile="0" resource="0"
+            file="Source/PlayheadSlider.h"/>
       <FILE id="tI8F2Z" name="ParameterRegistration.cpp" compile="1" resource="0"
             file="Source/ParameterRegistration.cpp"/>
       <FILE id="zl6rS5" name="ParameterRegistration.h" compile="0" resource="0"

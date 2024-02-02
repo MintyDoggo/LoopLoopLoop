@@ -89,6 +89,7 @@ void LoopLoopLoopAudioProcessor::updateGrainParameters()
 
         historyBuffer[0].grains[grain].setReadOffset(grain * settings.grainReadOffset * settings.grainSize); // todo: broken
         historyBuffer[1].grains[grain].setReadOffset(grain * settings.grainReadOffset * settings.grainSize);
+
     }
 }
 
